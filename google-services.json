@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1067587453247",
+    "firebase_url": "https://lawyeroo-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "lawyeroo",
+    "storage_bucket": "lawyeroo.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1067587453247:android:60d79fed9b8694dff4d38a",
+        "android_client_info": {
+          "package_name": "com.example.project"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1067587453247-aaoskd26l65qvkf8h5sphqfbco0qb1b3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDi1AOwiJywH3BsIsPNELZlAy31aKrmrws"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1067587453247-aaoskd26l65qvkf8h5sphqfbco0qb1b3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
