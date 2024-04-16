@@ -1,9 +1,10 @@
 const { initializeApp } = require('firebase/app');
+const { getStorage } = require('firebase/storage');
 const { getDatabase } = require('firebase/database');
 
-// Your web app's Firebase configuration
+// Your Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCxLAjeyj8700XQAWiChKoHkiVcYscFyJg",
+  apiKey: "AIzaSyCxLAjeyj8700XQAWiChk...",
   authDomain: "lawyeroo.firebaseapp.com",
   databaseURL: "https://lawyeroo-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "lawyeroo",
@@ -14,5 +15,6 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
+const storage = getStorage(app);
 
-module.exports = database;
+module.exports = { database, storage };
