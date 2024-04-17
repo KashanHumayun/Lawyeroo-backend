@@ -1,22 +1,27 @@
 class Lawyer {
-    constructor({ first_name, last_name, email, fees, ph_number, address, passwordHash, specializations, years_of_experience, universities, rating, profile_picture, verified, account_type }) {
-        this.first_name = first_name;
-        this.last_name = last_name;
-        this.email = email;
-        this.fees = fees;
-        this.ph_number = ph_number;
-        this.address = address;
-        this.passwordHash = passwordHash;  // Assuming the password is hashed before being passed to the constructor
+    constructor({
+        first_name, last_name, email, fees, ph_number, address, passwordHash,
+        specializations, years_of_experience, universities, rating, profile_picture,
+        verified, account_type
+    }) {
+        this.first_name = first_name || "";
+        this.last_name = last_name || "";
+        this.email = email || "";
+        this.fees = fees || "";
+        this.ph_number = ph_number || "";
+        this.address = address || "";
+        this.passwordHash = passwordHash || "";
         this.specializations = Array.isArray(specializations) ? specializations : [];
-        this.years_of_experience = years_of_experience;
-        this.universities = universities;
-        this.rating = rating;
-        this.created_at = new Date().toISOString(); // Always set on creation
-        this.updated_at = new Date().toISOString(); // Always set on creation
-        this.profile_picture = profile_picture;
+        this.years_of_experience = years_of_experience || 0;
+        this.universities = universities || "";
+        this.rating = rating || 0;
+        this.created_at = new Date().toISOString();
+        this.updated_at = new Date().toISOString();
+        this.profile_picture = profile_picture ;
         this.verified = verified || false;
         this.account_type = account_type || 'Lawyer';
     }
+    
 
     addSpecialization(specialization) {
         if (!this.specializations.includes(specialization)) {
@@ -33,6 +38,7 @@ class Lawyer {
     }
 
     serialize() {
+        // Ensure serialization does not send undefined or null values to Firebase
         return {
             first_name: this.first_name,
             last_name: this.last_name,

@@ -1,69 +1,76 @@
 const Lawyer = require('../models/lawyerModel');
-const { ref, set, push, getDatabase } = require('firebase/database');
+const { ref, set, push, getDatabase, get } = require('firebase/database');
 const { ref: storageRef, uploadBytes, getDownloadURL } = require('firebase/storage');
-const { storage } = require('../utils/firebaseConfig'); // adjust the path to your firebaseConfig module
+const { storage } = require('../utils/firebaseConfig');
+const axios = require('axios');
+
 const database = getDatabase();
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 
 async function uploadImageToFirebaseStorage(fileBuffer, fileName) {
-    const fileRef = storageRef(storage, 'images/' + fileName); // Create a reference to 'images/fileName'
+    const fileRef = storageRef(storage, 'images/' + fileName);
+    const uploadUrl = `https://firebasestorage.googleapis.com/v0/b/${fileRef.bucket}/o?uploadType=media&name=${encodeURIComponent(fileRef.fullPath)}`;
+
+    console.log("Attempting to upload file:", fileName);
+
     try {
-        const snapshot = await uploadBytes(fileRef, fileBuffer);
-        const url = await getDownloadURL(snapshot.ref);
+        const response = await axios.post(uploadUrl, fileBuffer, {
+            headers: { 'Content-Type': 'application/octet-stream' }
+        });
+        console.log("File uploaded, metadata:", response.data);
+
+        const url = `https://firebasestorage.googleapis.com/v0/b/${fileRef.bucket}/o/${encodeURIComponent(fileRef.fullPath)}?alt=media`;
+        console.log("Download URL obtained:", url);
         return url;
     } catch (error) {
-        console.error('Upload failed:', error);
-        throw new Error('Failed to upload image');
+        console.error('Upload failed:', error.response || error.message);
+        throw new Error('Failed to upload image due to error: ' + error.message);
     }
 }
 
-const addLawyer = async (req, res) => {
+async function addLawyer(req, res) {
     console.log("Starting to process adding a new lawyer");
-
     try {
-        console.log("Received request body: ", req.body);
-
         const {
             first_name, last_name, email, fees, ph_number, address,
             password, years_of_experience, universities,
             rating, verified, account_type
         } = req.body;
 
-        console.log("Parsed data from request");
-
+        console.log("Parsed data from request:", req.body);
         const specializations = JSON.parse(req.body.specializations || '[]');
         console.log("Specializations parsed:", specializations);
 
-        let profilePictureUrl = "default.jpg";  // Default profile picture
+        let profile_picture = "default.jpg";  // Assume a default if no file
         console.log("Default profile picture URL set");
 
         if (req.file) {
             console.log("Received file with name:", req.file.originalname);
-            try {
-                profilePictureUrl = await uploadImageToFirebaseStorage(req.file.buffer, req.file.originalname);
-                console.log("Image successfully uploaded to Firebase Storage:", profilePictureUrl);
-            } catch (err) {
-                console.error("Failed to upload image:", err);
-                return res.status(500).json({ message: "Failed to upload image", error: err.message });
-            }
+            profile_picture = await uploadImageToFirebaseStorage(req.file.buffer, req.file.originalname);
+            console.log("Image successfully uploaded to Firebase Storage, URL:", profile_picture);
         } else {
-            console.log("No file received for upload");
+            console.log("No file received, using default profile picture.");
+        }
+
+        console.log("Profile picture URL being saved:", profile_picture);
+
+        if (!profile_picture || profile_picture === "default.jpg") {
+            console.error("Valid profile picture URL not obtained, defaulting to placeholder.");
         }
 
         console.log("Hashing password...");
         const passwordHash = await bcrypt.hash(password, saltRounds);
         console.log("Password hashed successfully");
 
-        console.log("Creating new lawyer object");
         const newLawyer = new Lawyer({
             first_name, last_name, email, fees, ph_number, address,
-            passwordHash, // Use the hashed password
-            specializations, years_of_experience, universities,
-            rating, profilePictureUrl, verified, account_type
+            passwordHash, specializations, years_of_experience, universities,
+            rating, profile_picture, verified, account_type
         });
 
-        console.log("Pushing new lawyer to database...");
+        console.log("New lawyer object:", newLawyer);
+
         const lawyerRef = push(ref(database, 'lawyers'));
         await set(lawyerRef, newLawyer.serialize());
         console.log("Lawyer added successfully, ID:", lawyerRef.key);
@@ -73,7 +80,11 @@ const addLawyer = async (req, res) => {
         console.error("Error in adding lawyer:", error);
         res.status(500).json({ message: 'Error adding lawyer', error: error.message });
     }
-};
+}
+
+
+
+
 
 
 const getAllLawyers = async (req, res) => {
