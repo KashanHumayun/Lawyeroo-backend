@@ -1,5 +1,5 @@
 const Client = require('../models/clientModel');
-const { ref, set, push, getDatabase } = require('firebase/database');
+const { ref, set, push, getDatabase ,get } = require('firebase/database');
 const { ref: storageRef, uploadBytes, getDownloadURL } = require('firebase/storage');
 const { storage } = require('../utils/firebaseConfig');
 const axios = require('axios');
