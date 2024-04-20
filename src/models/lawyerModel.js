@@ -19,7 +19,7 @@ class Lawyer {
         this.updated_at = new Date().toISOString();
         this.profile_picture = profile_picture ;
         this.verified = verified || false;
-        this.account_type = account_type || 'Lawyer';
+        this.account_type = 'Lawyer';
     }
     
 

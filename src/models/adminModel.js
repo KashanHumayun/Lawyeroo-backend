@@ -6,7 +6,7 @@ class Admin {
       this.ph_number = ph_number;
       this.address = address;
       this.profile_picture = profile_picture;
-      this.account_type = account_type;
+      this.account_type = "Admin";
       this.password = password; // Remember to hash passwords in production
       this.created_at = new Date().toISOString();
       this.updated_at = new Date().toISOString();

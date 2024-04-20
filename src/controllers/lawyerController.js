@@ -1,21 +1,32 @@
 const Lawyer = require('../models/lawyerModel');
 const { ref, set, push, getDatabase , get} = require('firebase/database');
 const { ref: storageRef, uploadBytes, getDownloadURL } = require('firebase/storage');
-const { storage } = require('../utils/firebaseConfig');
+const { storage } = require('../config/firebaseConfig');
 const axios = require('axios');
 const crypto = require('crypto');
 const sendEmail = require('../utils/emailSender');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 
+
 const database = getDatabase();
+
+// Temporary in-memory storage for lawyer registrations
+const tempLawyersStorage = {};
+
+// Utility function to generate a unique key for each registration
+function generateTempKey(email) {
+    return `${email}_${Date.now()}`;
+}
+
+// Endpoint to initiate the registration of a lawyer
 
 async function initiateLawyerRegistration(req, res) {
     console.log("Received request to initiate lawyer registration");
 
     let { email, password, ...otherDetails } = req.body;
-
-    // Validate email
+    
+    // Validate email format
     if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
         console.log("Invalid email format provided:", email);
         return res.status(400).json({ message: "Invalid email format." });
@@ -25,7 +36,7 @@ async function initiateLawyerRegistration(req, res) {
     const otp = crypto.randomInt(100000, 999999).toString();
     console.log("Generated OTP:", otp);
 
-    // Send OTP email
+    // Attempt to send OTP email
     try {
         const message = {
             to: email,
@@ -40,106 +51,27 @@ async function initiateLawyerRegistration(req, res) {
         return res.status(500).json({ message: 'Failed to send OTP', error: error.message });
     }
 
-    // Hash password
+    // Hash the password
     const passwordHash = await bcrypt.hash(password, saltRounds);
     console.log("Password hashed");
 
-    // Temporarily store lawyer's data
-    const tempLawyerData = {
+    // Store registration data temporarily in memory
+    const tempKey = generateTempKey(email);
+    tempLawyersStorage[tempKey] = {
         email,
         passwordHash,
         otp,
-        otpExpires: Date.now() + 300000, // OTP expires in 5 minutes
-        ...otherDetails,
-        profile_picture: req.file ? req.file.buffer : null,
-        profile_picture_name: req.file ? req.file.originalname : null
+        otpExpires: Date.now() + 300000, // 5 minutes from now
+        ...otherDetails
     };
 
-    const tempRef = push(ref(database, 'temp_lawyers'));
-    await set(tempRef, tempLawyerData);
-    console.log("Temporary lawyer data stored", tempRef.key);
+    console.log("Temporary lawyer data stored in memory", tempKey);
 
-    res.status(200).json({ message: 'OTP sent to your email. Please verify to complete the registration.' });
+    res.status(200).json({ message: 'OTP sent to your email. Please verify to complete the registration.', tempKey });
 }
 
 // Environment variable check (usually placed in your initial setup, not within a request handler)
 console.log("SendGrid API Key:", process.env.SENDGRID_API_KEY);
-
-
-
-async function registerLawyer(req, res) {
-    const { email, otp } = req.body;
-    console.log('Received registration request:', { email, otp });
-
-    // Access the database reference
-    const tempRef = ref(database, 'temp_lawyers');
-    console.log('Checking temporary registrations...');
-    const snapshot = await get(tempRef);
-
-    if (!snapshot.exists()) {
-        console.log('No pending registrations found.');
-        return res.status(404).json({ message: 'No pending registrations found.' });
-    }
-
-    const entries = snapshot.val();
-    let found = false;
-    let entryKey = null;
-    let currentTime = Date.now();
-
-    console.log('Validating OTP and expiration...');
-    for (const key in entries) {
-        const entry = entries[key];
-        console.log(`Checking entry: ${key} with data:`, entry);
-
-        if (entry.email === email && entry.otp === otp) {
-            console.log(`Found matching email and OTP for entry: ${key}`);
-            console.log(`OTP expires at: ${entry.otpExpires}, Current time: ${currentTime}`);
-
-            if (entry.otpExpires > currentTime) {
-                found = true;
-                entryKey = key;
-                console.log(`Valid and active entry found: ${key}`);
-                
-                // Check and upload the profile picture here
-                let imageUrl = "default.jpg";  // Default image URL if none provided
-                if (entry.profile_picture) {
-                    console.log('Uploading profile picture...');
-                    try {
-                        imageUrl = await uploadImageToFirebaseStorage(entry.profile_picture, entry.profile_picture_name);
-                        console.log('Image uploaded successfully:', imageUrl);
-                    } catch (error) {
-                        console.error('Image upload failed:', error);
-                        return res.status(500).json({ message: 'Failed to upload image', error: error.message });
-                    }
-                }
-
-                // Prepare to move data from temp to permanent, now including the image URL
-                console.log('Registering lawyer permanently...');
-                const lawyerData = { ...entry, profile_picture: imageUrl };
-                delete lawyerData.otp;
-                delete lawyerData.otpExpires;
-                const lawyerRef = push(ref(database, 'lawyers'));
-                await set(lawyerRef, lawyerData);
-                console.log('Lawyer data set in database:', lawyerRef.key);
-                
-                await set(ref(database, `temp_lawyers/${entryKey}`), null);  // Delete temp data
-                console.log('Temporary data deleted for:', entryKey);
-
-                console.log('Lawyer registered successfully:', lawyerRef.key);
-                return res.status(201).json({ message: 'Lawyer registered successfully.', lawyerId: lawyerRef.key });
-            } else {
-                console.log(`OTP expired for entry: ${key}`);
-            }
-        }
-    }
-
-    if (!found) {
-        console.log('Invalid or expired OTP.');
-        return res.status(400).json({ message: 'Invalid or expired OTP.' });
-    }
-}
-
-
 
 async function uploadImageToFirebaseStorage(fileBuffer, fileName) {
     const fileRef = storageRef(storage, 'images/' + fileName);
@@ -157,6 +89,69 @@ async function uploadImageToFirebaseStorage(fileBuffer, fileName) {
         console.error('Upload failed:', error.response || error.message);
         throw new Error('Failed to upload image due to error: ' + error.message);
     }
+}
+
+async function registerLawyer(req, res) {
+    const { tempKey, otp } = req.body;
+    console.log('Received registration request:', { tempKey, otp });
+    if(req.file){
+        console.log('Received picture: nnn');
+    }
+    else{
+        console.log("Picture not reveice");
+    }
+    if (req.file) {
+        console.log('Received picture:', req.file.originalname);
+    } else {
+        console.log("No picture received.");
+    }
+    
+    const entry = tempLawyersStorage[tempKey];
+    console.log(entry);
+    
+    if (!entry) {
+        console.log('No registration found for the provided key.');
+        return res.status(404).json({ message: 'Registration not found.' });
+    }
+
+    if (entry.otp !== otp) {
+        console.log('OTP mismatch.');
+        return res.status(400).json({ message: 'Invalid or expired OTP.' });
+    }
+
+    let currentTime = Date.now();
+    if (entry.otpExpires < currentTime) {
+        console.log('OTP expired.');
+        return res.status(400).json({ message: 'OTP expired.' });
+    }
+
+    console.log(`Valid and active entry found: ${tempKey}, registering lawyer...`);
+
+    let imageUrl = "default.jpg";  // Default image URL if none provided
+    if (req.file) {
+        console.log('Uploading profile picture...');
+        try {
+            imageUrl = await uploadImageToFirebaseStorage(req.file.buffer, req.file.originalname);
+            console.log('Image uploaded successfully:', imageUrl);
+        } catch (error) {
+            console.error('Image upload failed:', error);
+            return res.status(500).json({ message: 'Failed to upload image', error: error.message });
+        }
+    }
+
+    const lawyerData = {
+        ...entry, profile_picture: imageUrl
+    };
+
+    const lawyerRef = push(ref(database, 'lawyers'));
+    await set(lawyerRef, lawyerData);
+    console.log('Lawyer data set in database:', lawyerRef.key);
+
+    // Clear the temporary data from memory
+    delete tempLawyersStorage[tempKey];
+    console.log('Temporary data cleared from memory for:', tempKey);
+
+    res.status(201).json({ message: 'Lawyer registered successfully.', lawyerId: lawyerRef.key });
 }
 
 async function addLawyer(req, res) {
@@ -225,5 +220,40 @@ async function getAllLawyers(req, res) {
         res.status(500).json({ message: 'Error retrieving lawyers', error: error.message });
     }
 }
+// New controller function to test image uploads
+async function uploadTestController(req, res) {
+    // Log detailed information about the received request
+    console.log('Request Headers:', req.headers);
+    console.log('Request Body Keys:', Object.keys(req.body));  // Display keys of any other form fields received
 
-module.exports = { addLawyer, getAllLawyers, registerLawyer, initiateLawyerRegistration };
+    if (req.file) {
+        // Log file details if received
+        console.log('Received image file name:', req.file.originalname);
+        console.log('File details:', {
+            originalName: req.file.originalname,
+            mimeType: req.file.mimetype,
+            size: req.file.size
+        });
+
+        res.send({
+            message: `Received image: ${req.file.originalname}`,
+            fileInfo: {
+                originalName: req.file.originalname,
+                mimeType: req.file.mimetype,
+                size: req.file.size
+            }
+        });
+    } else {
+        // Provide a more detailed error response if no file is received
+        console.log('No image uploaded.');
+        res.status(400).send({
+            message: 'No image uploaded.',
+            error: 'The server did not receive a file. Check the file field name and the form encoding type.',
+            headers: req.headers,
+            bodyKeys: Object.keys(req.body)  // This might help identify misnamed file fields or other data errors
+        });
+    }
+};
+
+
+module.exports = { addLawyer, getAllLawyers, registerLawyer, initiateLawyerRegistration, uploadTestController };

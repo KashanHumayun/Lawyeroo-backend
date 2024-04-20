@@ -1,6 +1,6 @@
 const Admin = require('../models/adminModel');
 const { ref, set, push, onValue } = require('firebase/database');
-const { database } = require('../utils/firebaseConfig'); // Corrected import
+const { database } = require('../config/firebaseConfig'); // Corrected import
 
 const registerAdmin = async (req, res) => {
     try {
