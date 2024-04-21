@@ -1,5 +1,5 @@
 const Lawyer = require('../models/lawyerModel');
-const { ref, set, push, getDatabase , get} = require('firebase/database');
+const { ref, set, push, getDatabase ,update, get} = require('firebase/database');
 const { ref: storageRef, uploadBytes, getDownloadURL } = require('firebase/storage');
 const { storage, database, getLawyerByEmail, getClientByEmail } = require('../config/firebaseConfig');
 const axios = require('axios');
@@ -22,7 +22,16 @@ function generateTempKey(email) {
 async function initiateLawyerRegistration(req, res) {
     console.log("Received request to initiate lawyer registration");
 
-    let { email, password, ...otherDetails } = req.body;
+    let { email, password,preferences, ...otherDetails } = req.body;
+        // Parse preferences safely
+        let parsedPreferences;
+        try {
+            parsedPreferences = JSON.parse(preferences);
+        } catch (error) {
+            console.error("Failed to parse preferences:", error);
+            return res.status(400).json({ message: "Invalid preferences format. Must be valid JSON." });
+        }
+    
     
     // Validate email format
     if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
@@ -69,6 +78,7 @@ async function initiateLawyerRegistration(req, res) {
         email,
         passwordHash,
         otp,
+        preferences: parsedPreferences,
         otpExpires: Date.now() + 300000, // 5 minutes from now
         ...otherDetails
     };
@@ -81,8 +91,18 @@ async function initiateLawyerRegistration(req, res) {
 // Environment variable check (usually placed in your initial setup, not within a request handler)
 console.log("SendGrid API Key:", process.env.SENDGRID_API_KEY);
 
-async function uploadImageToFirebaseStorage(fileBuffer, fileName) {
+//upload image to firebase function
+async function uploadImageToFirebaseStorage(fileBuffer, originalFileName) {
+    // Extract file extension from original file name
+    const extension = originalFileName.split('.').pop();
+
+    // Generate a random hex string for the file name
+    const randomName = crypto.randomBytes(16).toString('hex');
+
+    // Construct the new file name with the original extension
+    const fileName = `${randomName}.${extension}`;
     const fileRef = storageRef(storage, 'images/' + fileName);
+
     const uploadUrl = `https://firebasestorage.googleapis.com/v0/b/${fileRef.bucket}/o?uploadType=media&name=${encodeURIComponent(fileRef.fullPath)}`;
 
     console.log("Attempting to upload file:", fileName);
@@ -98,6 +118,7 @@ async function uploadImageToFirebaseStorage(fileBuffer, fileName) {
         throw new Error('Failed to upload image due to error: ' + error.message);
     }
 }
+
 
 async function registerLawyer(req, res) {
     const { tempKey, otp } = req.body;
@@ -162,6 +183,8 @@ async function registerLawyer(req, res) {
     res.status(201).json({ message: 'Lawyer registered successfully.', lawyerId: lawyerRef.key });
 }
 
+
+// function  to add a new Lawyer for testing
 async function addLawyer(req, res) {
     console.log("Starting to process adding a new lawyer");
     try {
@@ -210,6 +233,7 @@ async function addLawyer(req, res) {
     }
 }
 
+// function to get all lawyers
 async function getAllLawyers(req, res) {
     try {
         const lawyerRef = ref(database, 'lawyers');
@@ -228,6 +252,8 @@ async function getAllLawyers(req, res) {
         res.status(500).json({ message: 'Error retrieving lawyers', error: error.message });
     }
 }
+
+
 // New controller function to test image uploads
 async function uploadTestController(req, res) {
     // Log detailed information about the received request
@@ -263,5 +289,52 @@ async function uploadTestController(req, res) {
     }
 };
 
+async function updateLawyer(req, res) {
+    const lawyerId = req.params.id;
+    let updates = req.body;
 
-module.exports = { addLawyer, getAllLawyers, registerLawyer, initiateLawyerRegistration, uploadTestController };
+    // Convert updates to a plain object to ensure compatibility
+    updates = JSON.parse(JSON.stringify(updates));
+
+    // Validate inputs
+    if (updates.email && !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(updates.email)) {
+        return res.status(400).json({ message: "Invalid email format provided." });
+    }
+    if (updates.ph_number && !/^\+?\d{10,15}$/.test(updates.ph_number)) {
+        return res.status(400).json({ message: "Invalid phone number format." });
+    }
+    if (updates.fees && isNaN(parseFloat(updates.fees))) {
+        return res.status(400).json({ message: "Invalid fees format." });
+    }
+
+    const lawyerRef = ref(database, `lawyers/${lawyerId}`);
+
+    // Check if the lawyer exists before updating
+    const existingSnapshot = await get(lawyerRef);
+    if (!existingSnapshot.exists()) {
+        return res.status(404).json({ message: 'No such lawyer found' });
+    }
+
+    // Handle file upload
+    if (req.file) {
+        console.log('Received picture:', req.file.originalname);
+        const imageUrl = await uploadImageToFirebaseStorage(req.file.buffer, req.file.originalname);
+        updates.profile_picture = imageUrl; // Ensure this is added to a plain object
+        console.log('Image uploaded successfully:', imageUrl);
+    }
+
+    console.log("Updates to be applied:", updates);
+    await update(lawyerRef, updates);
+    console.log('Lawyer updated successfully:', updates);
+
+    // Fetch updated data to return in response
+    const updatedSnapshot = await get(lawyerRef);
+    if (updatedSnapshot.exists()) {
+        return res.status(200).json({ message: 'Lawyer updated successfully', data: updatedSnapshot.val() });
+    } else {
+        return res.status(404).json({ message: 'Failed to update lawyer' });
+    }
+}
+
+
+module.exports = { addLawyer, getAllLawyers, registerLawyer, initiateLawyerRegistration, uploadTestController, updateLawyer };

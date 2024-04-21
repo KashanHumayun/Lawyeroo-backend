@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const upload = require('../middleware/fileUpload'); // This imports multer configuration
-const { addLawyer,initiateLawyerRegistration, registerLawyer, getAllLawyers, uploadTestController } = require('../controllers/lawyerController');
+const { addLawyer,initiateLawyerRegistration, registerLawyer, getAllLawyers, uploadTestController, updateLawyer } = require('../controllers/lawyerController');
 
 // POST endpoint to add a new lawyer. Includes multer middleware for handling file uploads
 router.post('/add-lawyer', upload.single('profile_picture'), addLawyer);
@@ -14,6 +14,9 @@ router.post('/register-lawyer', upload.single('profile_picture'), initiateLawyer
 
 // POST endpoint to complete registration after OTP verification
 router.post('/register-complete', upload.single('profile_picture'), registerLawyer);
+
+//PUT endpoint to update a Lawyer
+router.put('/update-lawyer/:id', upload.single('profile_picture'), updateLawyer);
 
 // New POST endpoint to test image upload
 router.post('/test-upload', upload.single('profile_picture'), uploadTestController);
