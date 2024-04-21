@@ -1,7 +1,7 @@
 const Lawyer = require('../models/lawyerModel');
 const { ref, set, push, getDatabase , get} = require('firebase/database');
 const { ref: storageRef, uploadBytes, getDownloadURL } = require('firebase/storage');
-const { storage } = require('../config/firebaseConfig');
+const { storage, database, getLawyerByEmail, getClientByEmail } = require('../config/firebaseConfig');
 const axios = require('axios');
 const crypto = require('crypto');
 const sendEmail = require('../utils/emailSender');
@@ -9,7 +9,7 @@ const bcrypt = require('bcrypt');
 const saltRounds = 10;
 
 
-const database = getDatabase();
+// const database = getDatabase();
 
 // Temporary in-memory storage for lawyer registrations
 const tempLawyersStorage = {};
@@ -18,8 +18,6 @@ const tempLawyersStorage = {};
 function generateTempKey(email) {
     return `${email}_${Date.now()}`;
 }
-
-// Endpoint to initiate the registration of a lawyer
 
 async function initiateLawyerRegistration(req, res) {
     console.log("Received request to initiate lawyer registration");
@@ -32,11 +30,24 @@ async function initiateLawyerRegistration(req, res) {
         return res.status(400).json({ message: "Invalid email format." });
     }
 
-    // Generate OTP
+    // Check if the email is already used by a lawyer or client
+    try {
+        const isLawyer = await getLawyerByEmail(email);
+        const isClient = await getClientByEmail(email);
+        if (isLawyer) {
+            return res.status(409).json({ message: 'You are already registered as a lawyer.' });
+        }
+        if (isClient) {
+            return res.status(409).json({ message: 'You are already registered as a client.' });
+        }
+    } catch (error) {
+        console.error("Failed to check if email is already registered:", error);
+        return res.status(500).json({ message: 'Failed to check registration status', error: error.message });
+    }
+
+    // Continue with OTP generation and registration
     const otp = crypto.randomInt(100000, 999999).toString();
     console.log("Generated OTP:", otp);
-
-    // Attempt to send OTP email
     try {
         const message = {
             to: email,
@@ -51,11 +62,8 @@ async function initiateLawyerRegistration(req, res) {
         return res.status(500).json({ message: 'Failed to send OTP', error: error.message });
     }
 
-    // Hash the password
     const passwordHash = await bcrypt.hash(password, saltRounds);
     console.log("Password hashed");
-
-    // Store registration data temporarily in memory
     const tempKey = generateTempKey(email);
     tempLawyersStorage[tempKey] = {
         email,
@@ -66,9 +74,9 @@ async function initiateLawyerRegistration(req, res) {
     };
 
     console.log("Temporary lawyer data stored in memory", tempKey);
-
     res.status(200).json({ message: 'OTP sent to your email. Please verify to complete the registration.', tempKey });
 }
+
 
 // Environment variable check (usually placed in your initial setup, not within a request handler)
 console.log("SendGrid API Key:", process.env.SENDGRID_API_KEY);

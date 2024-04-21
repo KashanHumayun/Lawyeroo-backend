@@ -1,7 +1,7 @@
 const Client = require('../models/clientModel');
 const { ref, set, push, getDatabase ,get } = require('firebase/database');
 const { ref: storageRef, uploadBytes, getDownloadURL } = require('firebase/storage');
-const { storage } = require('../config/firebaseConfig');
+const { storage, database, getClientByEmail, getLawyerByEmail } = require('../config/firebaseConfig');
 const sendEmail = require('../utils/emailSender');
 
 const axios = require('axios');
@@ -9,7 +9,7 @@ const crypto = require('crypto');
 
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
-const database = getDatabase();
+
 const tempClientsStorage = {};
 
 // Utility function to generate a unique key for each registration
@@ -41,13 +41,29 @@ async function uploadImageToFirebaseStorage(fileBuffer, fileName) {
 async function initiateClientRegistration(req, res) {
     console.log("Received request to initiate Client registration");
 
-    let { email, password, ...otherDetails } = req.body;
+    let { email, password, preferences, ...otherDetails } = req.body;
     
+    const clientPreferences = JSON.parse(preferences);
     // Validate email format
     if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
         console.log("Invalid email format provided:", email);
         return res.status(400).json({ message: "Invalid email format." });
     }
+
+        // Check if the email is already used by a lawyer or client
+        try {
+            const isLawyer = await getLawyerByEmail(email);
+            const isClient = await getClientByEmail(email);
+            if (isLawyer) {
+                return res.status(409).json({ message: 'You are already registered as a lawyer.' });
+            }
+            if (isClient) {
+                return res.status(409).json({ message: 'You are already registered as a client.' });
+            }
+        } catch (error) {
+            console.error("Failed to check if email is already registered:", error);
+            return res.status(500).json({ message: 'Failed to check registration status', error: error.message });
+        }
 
     // Generate OTP
     const otp = crypto.randomInt(100000, 999999).toString();
@@ -78,6 +94,7 @@ async function initiateClientRegistration(req, res) {
         email,
         passwordHash,
         otp,
+        preferences: clientPreferences,
         otpExpires: Date.now() + 300000, // 5 minutes from now
         ...otherDetails
     };
@@ -100,7 +117,7 @@ async function registerClient(req, res) {
         console.log("No picture received.");
     }
     
-    const entry = tempLawyersStorage[tempKey];
+    const entry = tempClientsStorage[tempKey];
     console.log(entry);
     
     if (!entry) {
@@ -158,7 +175,7 @@ const addClient = async (req, res) => {
             email = '',
             ph_number = '',
             address = '',
-            password = '',
+            password = 'password@123',
             verified = false,
             account_type = 'Client',
             preferences = '[]'
@@ -183,7 +200,7 @@ const addClient = async (req, res) => {
 
         const passwordHash = await bcrypt.hash(password, saltRounds);
         console.log("Password hashed successfully");
-
+        
         const newClient = new Client({
             first_name,
             last_name,

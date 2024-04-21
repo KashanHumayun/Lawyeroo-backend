@@ -1,6 +1,6 @@
 const { initializeApp } = require('firebase/app');
+const { getDatabase, ref, get, orderByChild,query, equalTo } = require('firebase/database'); // Correctly import ref, orderByChild, equalTo
 const { getStorage } = require('firebase/storage');
-const { getDatabase } = require('firebase/database');
 
 // Your Firebase configuration
 const firebaseConfig = {
@@ -17,4 +17,40 @@ const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 const storage = getStorage(app);
 
-module.exports = { database, storage };
+function getLawyerByEmail(email) {
+  const lawyersRef = ref(database, 'lawyers'); // Ensure 'ref' is imported
+  const queryRef = query(lawyersRef, orderByChild('email'), equalTo(email)); // Use the query function correctly
+  return get(queryRef)
+    .then(snapshot => {
+      if (snapshot.exists()) {
+        console.log('Data found:', snapshot.val());
+        return snapshot.val();
+      } else {
+        console.log('No data found for the provided email.');
+        return null;
+      }
+    })
+    .catch(error => {
+      console.error('Error querying database:', error);
+      throw error;
+    });
+}
+function getClientByEmail(email) {
+  const clientsRef = ref(database, 'clients'); // Ensure 'ref' is imported
+  const queryRef = query(clientsRef, orderByChild('email'), equalTo(email)); // Use the query function correctly
+  return get(queryRef)
+    .then(snapshot => {
+      if (snapshot.exists()) {
+        console.log('Data found:', snapshot.val());
+        return snapshot.val();
+      } else {
+        console.log('No data found for the provided email.');
+        return null;
+      }
+    })
+    .catch(error => {
+      console.error('Error querying database:', error);
+      throw error;
+    });
+}
+module.exports = { database, storage, getLawyerByEmail, getClientByEmail };

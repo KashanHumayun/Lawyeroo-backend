@@ -8,6 +8,6 @@ router.post('/register-admin', (req, res) => {
   });
   
   // Route to get all admins
-  router.get('/admins', getAllAdmins);
+  router.get('/', getAllAdmins);
 
 module.exports = router;

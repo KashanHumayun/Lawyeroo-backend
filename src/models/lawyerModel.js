@@ -2,7 +2,7 @@ class Lawyer {
     constructor({
         first_name, last_name, email, fees, ph_number, address, passwordHash,
         specializations, years_of_experience, universities, rating, profile_picture,
-        verified, account_type
+        verified
     }) {
         this.first_name = first_name || "";
         this.last_name = last_name || "";

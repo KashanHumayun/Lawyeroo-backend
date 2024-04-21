@@ -21,7 +21,7 @@ app.use((req, res, next) => {
 });
 
 // Route handlers
-app.use('/api/admin', adminRoutes); // Handles all admin related routes
+app.use('/api/admins', adminRoutes); // Handles all admin related routes
 app.use('/api/lawyers', lawyerRoutes); // Handles all lawyer related routes
 app.use('/api/clients', clientRoutes); // Handles all client related routes
 app.use('/api', loginRoutes); // Handles login functionality
