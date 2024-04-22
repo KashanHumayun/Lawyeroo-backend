@@ -1,5 +1,5 @@
 const Client = require('../models/clientModel');
-const { ref, set, push, getDatabase ,get } = require('firebase/database');
+const { ref, set, push, getDatabase ,update, get } = require('firebase/database');
 const { ref: storageRef, uploadBytes, getDownloadURL } = require('firebase/storage');
 const { storage, database, getClientByEmail, getLawyerByEmail } = require('../config/firebaseConfig');
 const sendEmail = require('../utils/emailSender');
@@ -178,7 +178,8 @@ const addClient = async (req, res) => {
             password = 'password@123',
             verified = false,
             account_type = 'Client',
-            preferences = '[]'
+            preferences = '[]',
+            google_profile = '',
         } = req.body;
 
         console.log("Parsed data from request:", req.body);
@@ -186,6 +187,9 @@ const addClient = async (req, res) => {
         console.log("Preferences parsed:", clientPreferences);
 
         let profile_picture = "default.jpg";  // Assume a default if no file
+        if (google_profile){
+            profile_picture = google_profile;
+        }
         console.log("Default profile picture URL set");
 
         if (req.file) {
@@ -244,4 +248,50 @@ const getAllClients = async (req, res) => {
     res.status(500).json({ message: 'Error retrieving clients', error: error.message });
   }
 };
-module.exports = { addClient, getAllClients ,initiateClientRegistration, registerClient };
+
+
+async function updateClient(req, res) {
+    const clientId = req.params.id;
+    let updates = req.body;
+
+    // Convert updates to a plain object to ensure compatibility
+    updates = JSON.parse(JSON.stringify(updates));
+
+    // Validate inputs
+    if (updates.email && !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(updates.email)) {
+        return res.status(400).json({ message: "Invalid email format provided." });
+    }
+    if (updates.ph_number && !/^\+?\d{10,15}$/.test(updates.ph_number)) {
+        return res.status(400).json({ message: "Invalid phone number format." });
+    }
+
+
+    const clientRef = ref(database, `clients/${clientId}`);
+
+    // Check if the lawyer exists before updating
+    const existingSnapshot = await get(clientRef);
+    if (!existingSnapshot.exists()) {
+        return res.status(404).json({ message: 'No such client found' });
+    }
+
+    // Handle file upload
+    if (req.file) {
+        console.log('Received picture:', req.file.originalname);
+        const imageUrl = await uploadImageToFirebaseStorage(req.file.buffer, req.file.originalname);
+        updates.profile_picture = imageUrl; // Ensure this is added to a plain object
+        console.log('Image uploaded successfully:', imageUrl);
+    }
+
+    console.log("Updates to be applied:", updates);
+    await update(clientRef, updates);
+    console.log('Lawyer updated successfully:', updates);
+
+    // Fetch updated data to return in response
+    const updatedSnapshot = await get(clientRef);
+    if (updatedSnapshot.exists()) {
+        return res.status(200).json({ message: 'Client updated successfully', data: updatedSnapshot.val() });
+    } else {
+        return res.status(404).json({ message: 'Failed to update lawyer' });
+    }
+}
+module.exports = { addClient, getAllClients ,initiateClientRegistration, registerClient, updateClient };

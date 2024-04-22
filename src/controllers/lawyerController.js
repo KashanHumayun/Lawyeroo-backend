@@ -22,17 +22,20 @@ function generateTempKey(email) {
 async function initiateLawyerRegistration(req, res) {
     console.log("Received request to initiate lawyer registration");
 
-    let { email, password,preferences, ...otherDetails } = req.body;
-        // Parse preferences safely
-        let parsedPreferences;
-        try {
-            parsedPreferences = JSON.parse(preferences);
-        } catch (error) {
-            console.error("Failed to parse preferences:", error);
-            return res.status(400).json({ message: "Invalid preferences format. Must be valid JSON." });
+    let { email, password, specializations, ...otherDetails } = req.body;
+
+    // Parse specializations safely
+    let parsedSpecializations;
+    try {
+        parsedSpecializations = JSON.parse(specializations);
+        if (!Array.isArray(parsedSpecializations)) {
+            throw new Error("Specializations must be an array.");
         }
-    
-    
+    } catch (error) {
+        console.error("Failed to parse specializations:", error);
+        return res.status(400).json({ message: "Invalid specializations format. Must be a valid JSON array." });
+    }
+
     // Validate email format
     if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
         console.log("Invalid email format provided:", email);
@@ -78,7 +81,7 @@ async function initiateLawyerRegistration(req, res) {
         email,
         passwordHash,
         otp,
-        preferences: parsedPreferences,
+        specializations: parsedSpecializations,
         otpExpires: Date.now() + 300000, // 5 minutes from now
         ...otherDetails
     };
@@ -86,6 +89,7 @@ async function initiateLawyerRegistration(req, res) {
     console.log("Temporary lawyer data stored in memory", tempKey);
     res.status(200).json({ message: 'OTP sent to your email. Please verify to complete the registration.', tempKey });
 }
+
 
 
 // Environment variable check (usually placed in your initial setup, not within a request handler)

@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const upload = require('../middleware/fileUpload'); // Ensure this imports your multer configuration
-const { addClient, getAllClients, initiateClientRegistration, registerClient } = require('../controllers/clientController');
+const { addClient, getAllClients, initiateClientRegistration, registerClient, updateClient } = require('../controllers/clientController');
 
 // Modify the POST route to include multer middleware for handling the profile_picture
 router.post('/add-client', upload.single('profile_picture'), addClient);
@@ -16,5 +16,8 @@ router.post('/register-client', upload.single('profile_picture'), initiateClient
 
 // POST endpoint to complete registration after OTP verification
 router.post('/register-complete', upload.single('profile_picture'), registerClient);
+
+
+router.put('/update-client/:id', upload.single('profile_picture'), updateClient);
 
 module.exports = router;

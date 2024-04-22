@@ -9,7 +9,7 @@ class Client {
         this.email = email || "";
         this.ph_number = ph_number || "";
         this.address = address || "";
-        this.password = passwordHash || ""; // Remember to hash passwords in production
+        this.passwordHash = passwordHash || ""; // Remember to hash passwords in production
         this.created_at = new Date().toISOString();
         this.updated_at = new Date().toISOString();
         this.profile_picture = profile_picture || "";
