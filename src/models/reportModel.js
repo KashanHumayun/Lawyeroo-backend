@@ -1,5 +1,6 @@
 class Report {
-    constructor({ reporter_id, report_text, report_type, status, reported_at }) {
+    constructor({ reporter_id, report_title, report_text, report_type, status, reported_at }) {
+        this.report_title = report_title;
         this.reporter_id = reporter_id;
         this.report_text = report_text;
         this.report_type = report_type;
@@ -9,6 +10,7 @@ class Report {
 
     serialize() {
         return {
+            report_title:this.report_title,
             reporter_id: this.reporter_id,
             report_text: this.report_text,
             report_type: this.report_type,
