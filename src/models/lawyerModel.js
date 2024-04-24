@@ -21,7 +21,6 @@ class Lawyer {
         this.verified = verified || false;
         this.account_type = 'Lawyer';
     }
-    
 
     addSpecialization(specialization) {
         if (!this.specializations.includes(specialization)) {

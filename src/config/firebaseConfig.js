@@ -53,4 +53,22 @@ function getClientByEmail(email) {
       throw error;
     });
 }
-module.exports = { database, storage, getLawyerByEmail, getClientByEmail };
+function getAdminByEmail(email) {
+  const clientsRef = ref(database, 'admins'); // Ensure 'ref' is imported
+  const queryRef = query(clientsRef, orderByChild('email'), equalTo(email)); // Use the query function correctly
+  return get(queryRef)
+    .then(snapshot => {
+      if (snapshot.exists()) {
+        console.log('Data found:', snapshot.val());
+        return snapshot.val();
+      } else {
+        console.log('No data found for the provided email.');
+        return null;
+      }
+    })
+    .catch(error => {
+      console.error('Error querying database:', error);
+      throw error;
+    });
+}
+module.exports = { database, storage, getLawyerByEmail, getClientByEmail, getAdminByEmail };

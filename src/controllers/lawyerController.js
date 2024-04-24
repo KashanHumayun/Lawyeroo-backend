@@ -186,8 +186,6 @@ async function registerLawyer(req, res) {
 
     res.status(201).json({ message: 'Lawyer registered successfully.', lawyerId: lawyerRef.key });
 }
-
-
 // function  to add a new Lawyer for testing
 async function addLawyer(req, res) {
     console.log("Starting to process adding a new lawyer");

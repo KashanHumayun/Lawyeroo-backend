@@ -1,13 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const upload = require('../middleware/fileUpload'); // This imports multer configuration
+const authenticateTokenAndRole = require('../middleware/authenticateTokenAndRole'); // Adjust the path as necessary
 const { addLawyer,initiateLawyerRegistration, registerLawyer, getAllLawyers, uploadTestController, updateLawyer } = require('../controllers/lawyerController');
 
 // POST endpoint to add a new lawyer. Includes multer middleware for handling file uploads
 router.post('/add-lawyer', upload.single('profile_picture'), addLawyer);
 
-// GET endpoint to retrieve all lawyers
-router.get('/', getAllLawyers);
+// Using the role-checking middleware to protect the route
+router.get('/', authenticateTokenAndRole('clients'), getAllLawyers);
+
 
 // POST endpoint to initiate the registration of a new lawyer, including file upload handling
 router.post('/register-lawyer', upload.single('profile_picture'), initiateLawyerRegistration);
