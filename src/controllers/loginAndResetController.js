@@ -1,15 +1,19 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const { getDatabase, ref, query, orderByChild, equalTo, get } = require('firebase/database');
+const { getDatabase, ref, query, orderByChild, equalTo, get, update } = require('firebase/database');
 const { getLawyerByEmail, getClientByEmail } = require('../config/firebaseConfig');
+const crypto = require('crypto');
+const saltRounds = 10;
 
 const JWT_SECRET = process.env.JWT_SECRET; // Ensure you have a secure secret key
 const sendEmail = require('../utils/emailSender');
 
 let otpStore = {}; // This will store OTPs keyed by user's email
 
-function storeOtp(email, otp, otpExpires) {
-    otpStore[email] = { otp, otpExpires };
+
+
+function storeOtp(email, otp, otpExpires, userType) {
+    otpStore[email] = { otp, otpExpires, userType }; // Store user type along with OTP
     setTimeout(() => {
         delete otpStore[email]; // Automatically delete OTP after expiry
     }, otpExpires - Date.now());
@@ -87,20 +91,38 @@ const login = async (req, res) => {
     }
 };
 
-// Send a reset password code to a user's email
 async function sendResetPasswordCode(req, res) {
     const { email } = req.body;
+    console.log('Email:', email);
 
-    if (!email || !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
+    // Validate email format
+    if (!email || !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email.trim())) {
         return res.status(400).json({ message: "Invalid email format." });
     }
 
     try {
+        let userType = null;
+        const lawyer = await getLawyerByEmail(email);
+        const client = await getClientByEmail(email);
+        
+        if (lawyer) {
+            userType = 'lawyers';
+        } else if (client) {
+            userType = 'clients';
+        }
+
+        if (!userType) {
+            return res.status(404).json({ message: "No user found with this email." });
+        }
+
         // Generate OTP and expiration
         const otp = crypto.randomInt(100000, 999999).toString();
         const otpExpires = Date.now() + 300000; // OTP expires in 5 minutes
 
-        storeOtp(email, otp, otpExpires);
+        console.log("Generated OTP:", otp); // Display the generated OTP
+        console.log("OTP expiration time:", new Date(otpExpires).toLocaleString()); // Display the expiration time
+
+        storeOtp(email, otp, otpExpires, userType);
 
         const message = {
             to: email,
@@ -116,6 +138,31 @@ async function sendResetPasswordCode(req, res) {
         console.error("Error in sending reset password code:", error);
         res.status(500).json({ message: "Failed to send password reset code.", error: error.message });
     }
+}
+async function updateUserPassword(email, passwordHash) {
+    const database = getDatabase();
+    const otpData = otpStore[email];
+    if (!otpData) {
+        throw new Error("OTP data not found, cannot update password.");
+    }
+
+    const { userType } = otpData;
+    const usersRef = ref(database, userType);
+    const userQuery = query(usersRef, orderByChild('email'), equalTo(email));
+    const snapshot = await get(userQuery);
+
+    if (!snapshot.exists()) {
+        console.error("No user found with this email to update the password.");
+        throw new Error("User not found");
+    }
+
+    snapshot.forEach(async (childSnapshot) => {
+        const userKey = childSnapshot.key;
+        const updatePath = {};
+        updatePath[`${userType}/${userKey}/passwordHash`] = passwordHash;
+        await update(ref(database), updatePath); // Update the password hash at the specific path
+        console.log(`Password updated for ${userType} with email: ${email}`);
+    });
 }
 
 // Reset a user's password after verifying their OTP
@@ -147,7 +194,4 @@ async function resetPassword(req, res) {
     }
 }
 
-
-
-
-module.exports = { login };
+module.exports = { login, sendResetPasswordCode, resetPassword};

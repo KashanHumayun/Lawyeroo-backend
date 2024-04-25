@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET; // Ensure this is securely stored
 
 // Middleware to authenticate token and check user role
-const authenticateTokenAndRole = (requiredRole) => {
+const authenticateTokenAndRole = (requiredRoles) => {
     return (req, res, next) => {
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
@@ -16,7 +16,8 @@ const authenticateTokenAndRole = (requiredRole) => {
                 return res.sendStatus(403); // Forbidden if token is invalid
             }
 
-            if (user.userType !== requiredRole) {
+            // Check if user's role is one of the required roles
+            if (!requiredRoles.includes(user.userType)) {
                 return res.status(403).json({ message: "Access denied: unauthorized role" }); // Forbidden if role does not match
             }
 

@@ -20,8 +20,8 @@ const lawyerRoutes = require('./src/routes/lawyerRoutes');
 const loginRoutes = require('./src/routes/loginRoutes');
 const clientRoutes = require('./src/routes/clientRoutes');
 const reportRoutes = require('./src/routes/reportRoutes');
-
-
+const questionRoutes = require('./src/routes/questionRoutes');
+const appointmentRoutes = require('./src/routes/appointmentRoutes');
 
 // Middlewares
 app.use(cors());
@@ -117,6 +117,8 @@ app.use('/api/lawyers', lawyerRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api', loginRoutes);
+app.use('/api/questions', questionRoutes);
+app.use('/api/appointments', appointmentRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

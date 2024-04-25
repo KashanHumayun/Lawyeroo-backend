@@ -8,7 +8,7 @@ const { addLawyer,initiateLawyerRegistration, registerLawyer, getAllLawyers, upl
 router.post('/add-lawyer', upload.single('profile_picture'), addLawyer);
 
 // Using the role-checking middleware to protect the route
-router.get('/', authenticateTokenAndRole('clients'), getAllLawyers);
+router.get('/', authenticateTokenAndRole(['clients']), getAllLawyers);
 
 
 // POST endpoint to initiate the registration of a new lawyer, including file upload handling
