@@ -1,0 +1,163 @@
+const { ref, set, get, update, remove, query, orderByKey, equalTo } = require('firebase/database');
+const { database } = require('../config/firebaseConfig');
+
+async function addCase(req, res) {
+    const { client_id, lawyer_id, case_name, case_details, case_type, case_status } = req.body;
+    const created_at = new Date().toISOString();
+    const updated_at = created_at; // Initially, created_at and updated_at will be the same
+
+    // Reference to the database locations for client and lawyer
+    const clientRef = ref(database, `clients/${client_id}`);
+    const lawyerRef = ref(database, `lawyers/${lawyer_id}`);
+
+    try {
+        // Check if the client exists
+        const clientSnapshot = await get(clientRef);
+        if (!clientSnapshot.exists()) {
+            return res.status(404).json({ message: 'Client not found' });
+        }
+
+        // Check if the lawyer exists
+        const lawyerSnapshot = await get(lawyerRef);
+        if (!lawyerSnapshot.exists()) {
+            return res.status(404).json({ message: 'Lawyer not found' });
+        }
+
+        // If both exist, proceed to create the case
+        const caseRef = ref(database, 'cases/' + Date.now()); // Using current timestamp as a simple unique ID
+        await set(caseRef, {
+            client_id,
+            lawyer_id,
+            case_name,
+            case_details,
+            case_type,
+            created_at,
+            updated_at,
+            case_status
+        });
+        res.status(201).json({ message: 'Case added successfully', caseId: caseRef.key });
+    } catch (error) {
+        console.error('Error adding case:', error);
+        res.status(500).json({ message: 'Failed to add case', error: error.toString() });
+    }
+}
+
+async function updateCase(req, res) {
+    const { case_id } = req.params;
+    const updates = req.body;
+    updates.updated_at = new Date().toISOString(); // Update the updated_at field to current time
+
+    const caseRef = ref(database, `cases/${case_id}`);
+    try {
+        await update(caseRef, updates);
+        res.status(200).json({ message: 'Case updated successfully' });
+    } catch (error) {
+        console.error('Error updating case:', error);
+        res.status(500).json({ message: 'Failed to update case', error: error.toString() });
+    }
+}
+
+
+async function deleteCase(req, res) {
+    const { case_id } = req.params;
+
+    const caseRef = ref(database, `cases/${case_id}`);
+    try {
+        await remove(caseRef);
+        res.status(200).json({ message: 'Case deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting case:', error);
+        res.status(500).json({ message: 'Failed to delete case', error: error.toString() });
+    }
+}
+
+
+async function getCase(req, res) {
+    const { case_id } = req.params;
+
+    const caseRef = ref(database, `cases/${case_id}`);
+    try {
+        const caseSnapshot = await get(caseRef);
+        if (caseSnapshot.exists()) {
+            res.status(200).json(caseSnapshot.val());
+        } else {
+            res.status(404).json({ message: 'Case not found' });
+        }
+    } catch (error) {
+        console.error('Error retrieving case:', error);
+        res.status(500).json({ message: 'Failed to retrieve case', error: error.toString() });
+    }
+}
+
+async function getAllCasesByUserId(req, res) {
+    const { user_id, role } = req.params;
+
+    // Validate the role to ensure it's either 'lawyer' or 'client'
+    if (!['lawyer', 'client'].includes(role)) {
+        return res.status(400).json({ message: 'Invalid role specified. Must be either lawyer or client.' });
+    }
+
+    const roleField = role + '_id';  // 'lawyer_id' or 'client_id'
+    const casesRef = ref(database, 'cases');
+
+    try {
+        // Fetch all cases
+        const allCasesSnapshot = await get(casesRef);
+        if (!allCasesSnapshot.exists()) {
+            return res.status(404).json({ message: 'No cases found' });
+        }
+
+        let cases = [];
+        let userDetailsPromises = [];
+
+        allCasesSnapshot.forEach(childSnapshot => {
+            let caseData = childSnapshot.val();
+            // Filter cases by user_id based on role
+            if (caseData[roleField] === user_id) {
+                caseData.case_id = childSnapshot.key;  // Include the case ID
+
+                // Fetch additional details for lawyer and client
+                userDetailsPromises.push(
+                    get(ref(database, `lawyers/${caseData.lawyer_id}`)).then(lawyerSnapshot => {
+                        if (lawyerSnapshot.exists()) {
+                            caseData.lawyerDetails = lawyerSnapshot.val();
+                        } else {
+                            caseData.lawyerDetails = { message: 'Lawyer details not found' };
+                        }
+                    }),
+                    get(ref(database, `clients/${caseData.client_id}`)).then(clientSnapshot => {
+                        if (clientSnapshot.exists()) {
+                            caseData.clientDetails = clientSnapshot.val();
+                        } else {
+                            caseData.clientDetails = { message: 'Client details not found' };
+                        }
+                    })
+                );
+
+                cases.push(caseData);
+            }
+        });
+
+        // Resolve all promises to fetch user details
+        await Promise.all(userDetailsPromises);
+
+        if (cases.length === 0) {
+            return res.status(404).json({ message: 'No cases found for this user' });
+        }
+
+        console.log(`Cases with additional user data retrieved successfully for ${role} ID: ${user_id}`);
+        res.status(200).json(cases);
+    } catch (error) {
+        console.error(`Error retrieving cases for ${role} with ID ${user_id}:`, error);
+        res.status(500).json({ message: 'Failed to retrieve cases', error: error.toString() });
+    }
+}
+
+
+module.exports = {
+    addCase,
+    updateCase,
+    deleteCase,
+    getCase,
+    getAllCasesByUserId
+};

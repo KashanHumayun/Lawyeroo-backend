@@ -1,5 +1,5 @@
 const Client = require('../models/clientModel');
-const { ref, set, push, getDatabase ,update, get } = require('firebase/database');
+const { ref, set, push, getDatabase ,update, get, remove } = require('firebase/database');
 const { ref: storageRef, uploadBytes, getDownloadURL } = require('firebase/storage');
 const { storage, database, getClientByEmail, getLawyerByEmail } = require('../config/firebaseConfig');
 const sendEmail = require('../utils/emailSender');
@@ -234,20 +234,49 @@ const addClient = async (req, res) => {
 };
 
 
-const getAllClients = async (req, res) => {
-  try {
-    const snapshot = await get(ref(database, 'clients'));
-    if (!snapshot.exists()) {
-      return res.status(404).json({ message: 'No clients found' });
-    }
+async function getAllClients(req, res) {
+    const {
+        name,           // Filter by partial match to first_name or last_name
+        verified,       // Filter by verification status ('true' or 'false')
+        account_type    // Filter by account type
+    } = req.query;
 
-    const clients = snapshot.val();
-    const clientArray = Object.keys(clients).map(key => ({ client_id: key, ...clients[key] }));
-    res.status(200).json(clientArray);
-  } catch (error) {
-    res.status(500).json({ message: 'Error retrieving clients', error: error.message });
-  }
-};
+    try {
+        const clientRef = ref(database, 'clients');
+        const snapshot = await get(clientRef);
+        if (!snapshot.exists()) {
+            return res.status(404).json({ message: 'No clients found' });
+        }
+
+        let clients = [];
+        snapshot.forEach(childSnapshot => {
+            let client = childSnapshot.val();
+            client.client_id = childSnapshot.key; // Assign the Firebase key as the client_id
+
+            // Apply filters
+            if (name && !`${client.first_name} ${client.last_name}`.toLowerCase().includes(name.toLowerCase())) {
+                return; // Skip this client if name filter is applied and doesn't match
+            }
+            if (verified && client.verified.toString() !== verified) {
+                return; // Skip if verified filter does not match
+            }
+            if (account_type && client.account_type.toLowerCase() !== account_type.toLowerCase()) {
+                return; // Skip if account type filter does not match
+            }
+
+            clients.push(client);
+        });
+
+        if (clients.length === 0) {
+            return res.status(404).json({ message: 'No matching clients found' });
+        }
+
+        res.status(200).json(clients);
+    } catch (error) {
+        console.error("Error retrieving clients with filters:", error);
+        res.status(500).json({ message: 'Error retrieving clients', error: error.message });
+    }
+}
 
 
 async function updateClient(req, res) {
@@ -294,4 +323,97 @@ async function updateClient(req, res) {
         return res.status(404).json({ message: 'Failed to update lawyer' });
     }
 }
-module.exports = { addClient, getAllClients ,initiateClientRegistration, registerClient, updateClient };
+
+async function getClientById(req, res) {
+    const clientId = req.params.id;  // The ID of the client is expected to be part of the URL path
+
+    const clientRef = ref(database, `clients/${clientId}`);
+
+    try {
+        const clientSnapshot = await get(clientRef);
+        if (clientSnapshot.exists()) {
+            const clientData = clientSnapshot.val();
+            console.log(`Client data retrieved successfully for ID: ${clientId}`);
+            res.status(200).json(clientData);
+        } else {
+            console.log(`No client found with ID: ${clientId}`);
+            res.status(404).json({ message: 'Client not found' });
+        }
+    } catch (error) {
+        console.error(`Error retrieving client by ID ${clientId}:`, error);
+        res.status(500).json({ message: 'Failed to retrieve client', error: error.toString() });
+    }
+}
+
+async function addFavoriteLawyer(req, res) {
+    const { client_id, lawyer_id } = req.body;
+
+    const favoriteRef = ref(database, `clients/${client_id}/favorites/${lawyer_id}`);
+    const added_at = new Date().toISOString();
+
+    try {
+        await set(favoriteRef, {
+            lawyer_id,
+            added_at
+        });
+        res.status(201).json({ message: 'Lawyer added to favorites successfully' });
+    } catch (error) {
+        console.error('Failed to add favorite lawyer:', error);
+        res.status(500).json({ message: 'Failed to add favorite lawyer', error: error.toString() });
+    }
+}
+
+async function deleteFavoriteLawyer(req, res) {
+    const { client_id, lawyer_id } = req.params;
+
+    const favoriteRef = ref(database, `clients/${client_id}/favorites/${lawyer_id}`);
+
+    try {
+        await remove(favoriteRef);
+        res.status(200).json({ message: 'Lawyer removed from favorites successfully' });
+    } catch (error) {
+        console.error('Failed to remove favorite lawyer:', error);
+        res.status(500).json({ message: 'Failed to remove favorite lawyer', error: error.toString() });
+    }
+}
+
+
+async function getAllFavoriteLawyers(req, res) {
+    const { client_id } = req.params;
+
+    const favoritesRef = ref(database, `clients/${client_id}/favorites`);
+
+    try {
+        const snapshot = await get(favoritesRef);
+        if (snapshot.exists()) {
+            let favoriteIds = [];
+            snapshot.forEach(childSnapshot => {
+                favoriteIds.push(childSnapshot.key);  // Assuming the key is the lawyer_id
+            });
+
+            // Fetch each lawyer's details using the IDs collected
+            const lawyerDetailsPromises = favoriteIds.map(lawyerId => 
+                get(ref(database, `lawyers/${lawyerId}`)).then(lawyerSnapshot => {
+                    if (lawyerSnapshot.exists()) {
+                        return { lawyer_id: lawyerId, ...lawyerSnapshot.val() };
+                    } else {
+                        return { lawyer_id: lawyerId, message: 'Lawyer details not found' };
+                    }
+                })
+            );
+
+            // Wait for all promises to resolve
+            const lawyers = await Promise.all(lawyerDetailsPromises);
+            res.status(200).json(lawyers);
+        } else {
+            res.status(404).json({ message: 'No favorite lawyers found' });
+        }
+    } catch (error) {
+        console.error('Failed to retrieve favorite lawyers:', error);
+        res.status(500).json({ message: 'Failed to retrieve favorite lawyers', error: error.toString() });
+    }
+}
+
+
+module.exports = { addClient, getAllClients ,initiateClientRegistration, registerClient, 
+    updateClient, getClientById , addFavoriteLawyer, deleteFavoriteLawyer, getAllFavoriteLawyers};

@@ -22,6 +22,8 @@ const clientRoutes = require('./src/routes/clientRoutes');
 const reportRoutes = require('./src/routes/reportRoutes');
 const questionRoutes = require('./src/routes/questionRoutes');
 const appointmentRoutes = require('./src/routes/appointmentRoutes');
+const lawyerCommentRoutes = require('./src/routes/lawyerCommentRoutes');
+const caseRoutes = require('./src/routes/caseRoutes');
 
 // Middlewares
 app.use(cors());
@@ -119,7 +121,8 @@ app.use('/api/reports', reportRoutes);
 app.use('/api', loginRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/appointments', appointmentRoutes);
-
+app.use ('/api/comments', lawyerCommentRoutes);
+app.use ('/api', caseRoutes);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
