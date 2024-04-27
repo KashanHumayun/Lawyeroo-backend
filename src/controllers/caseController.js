@@ -1,5 +1,7 @@
 const { ref, set, get, update, remove, query, orderByKey, equalTo } = require('firebase/database');
 const { database } = require('../config/firebaseConfig');
+const logger = require('../utils/logger');
+
 
 async function addCase(req, res) {
     const { client_id, lawyer_id, case_name, case_details, case_type, case_status } = req.body;
@@ -14,12 +16,14 @@ async function addCase(req, res) {
         // Check if the client exists
         const clientSnapshot = await get(clientRef);
         if (!clientSnapshot.exists()) {
+            logger.error('Client not found');
             return res.status(404).json({ message: 'Client not found' });
         }
 
         // Check if the lawyer exists
         const lawyerSnapshot = await get(lawyerRef);
         if (!lawyerSnapshot.exists()) {
+            logger.error('Lawyer not found');
             return res.status(404).json({ message: 'Lawyer not found' });
         }
 
@@ -35,9 +39,10 @@ async function addCase(req, res) {
             updated_at,
             case_status
         });
+        logger.info('Case added successfully');
         res.status(201).json({ message: 'Case added successfully', caseId: caseRef.key });
     } catch (error) {
-        console.error('Error adding case:', error);
+        logger.error('Failed to add case:', error);
         res.status(500).json({ message: 'Failed to add case', error: error.toString() });
     }
 }
@@ -50,13 +55,13 @@ async function updateCase(req, res) {
     const caseRef = ref(database, `cases/${case_id}`);
     try {
         await update(caseRef, updates);
+        logger.info('Case updated successfully');
         res.status(200).json({ message: 'Case updated successfully' });
     } catch (error) {
-        console.error('Error updating case:', error);
+        logger.error('Failed to update case:', error);
         res.status(500).json({ message: 'Failed to update case', error: error.toString() });
     }
 }
-
 
 async function deleteCase(req, res) {
     const { case_id } = req.params;
@@ -64,13 +69,13 @@ async function deleteCase(req, res) {
     const caseRef = ref(database, `cases/${case_id}`);
     try {
         await remove(caseRef);
+        logger.info('Case deleted successfully');
         res.status(200).json({ message: 'Case deleted successfully' });
     } catch (error) {
-        console.error('Error deleting case:', error);
+        logger.error('Failed to delete case:', error);
         res.status(500).json({ message: 'Failed to delete case', error: error.toString() });
     }
 }
-
 
 async function getCase(req, res) {
     const { case_id } = req.params;
@@ -79,15 +84,18 @@ async function getCase(req, res) {
     try {
         const caseSnapshot = await get(caseRef);
         if (caseSnapshot.exists()) {
+            logger.info('Case retrieved successfully');
             res.status(200).json(caseSnapshot.val());
         } else {
+            logger.info('Case not found');
             res.status(404).json({ message: 'Case not found' });
         }
     } catch (error) {
-        console.error('Error retrieving case:', error);
+        logger.error('Failed to retrieve case:', error);
         res.status(500).json({ message: 'Failed to retrieve case', error: error.toString() });
     }
 }
+
 
 async function getAllCasesByUserId(req, res) {
     const { user_id, role } = req.params;
@@ -142,16 +150,18 @@ async function getAllCasesByUserId(req, res) {
         await Promise.all(userDetailsPromises);
 
         if (cases.length === 0) {
+            logger.info(`No cases found for ${role} ID: ${user_id}`);
             return res.status(404).json({ message: 'No cases found for this user' });
         }
 
-        console.log(`Cases with additional user data retrieved successfully for ${role} ID: ${user_id}`);
+        logger.info(`Cases with additional user data retrieved successfully for ${role} ID: ${user_id}`);
         res.status(200).json(cases);
     } catch (error) {
-        console.error(`Error retrieving cases for ${role} with ID ${user_id}:`, error);
+        logger.error(`Error retrieving cases for ${role} with ID ${user_id}:`, error);
         res.status(500).json({ message: 'Failed to retrieve cases', error: error.toString() });
     }
 }
+
 
 
 module.exports = {

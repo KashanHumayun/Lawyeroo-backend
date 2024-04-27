@@ -2,6 +2,8 @@
 const { ref, push, set, get, child, remove, update } = require('firebase/database');
 const { database } = require('../config/firebaseConfig');
 const schedule = require('node-schedule');
+const logger = require('../utils/logger');
+
 
 // Utility to send notifications (pseudo-code)
 const sendNotification = async (userId, message) => {
@@ -9,7 +11,6 @@ const sendNotification = async (userId, message) => {
     // Implement notification logic here (e.g., Firebase Cloud Messaging)
 };
 
-// Create a new appointment
 exports.createAppointment = async (req, res) => {
     try {
         const { client_id, lawyer_id, appointment_title } = req.body;
@@ -41,18 +42,10 @@ exports.createAppointment = async (req, res) => {
 
         await set(appointmentRef, newAppointment);
 
-        // // Schedule a reminder 10 minutes before the appointment
-        // const date = new Date(appointment_date);
-        // const reminderTime = new Date(date.getTime() - 10 * 60000); // 10 minutes before
-
-        // schedule.scheduleJob(reminderTime, function() {
-        //     sendNotification(client_id, `Reminder: Your appointment '${appointment_title}' is in 10 minutes.`);
-        //     sendNotification(lawyer_id, `Reminder: Your appointment '${appointment_title}' is in 10 minutes.`);
-        // });
-
+        logger.info('Appointment created successfully:', { appointment_id: appointmentRef.key });
         res.status(201).json({ message: 'Appointment created successfully', appointment_id: appointmentRef.key });
     } catch (error) {
-        console.error("Error creating appointment:", error);
+        logger.error('Failed to create appointment:', error);
         res.status(500).json({ message: 'Failed to create appointment', error: error.message });
     }
 };
@@ -74,16 +67,21 @@ exports.updateAppointmentStatus = async (req, res) => {
 
         // Update the appointment status
         await update(appointmentRef, { appointment_status: status, appointment_date: date });
+
+        logger.info(`Appointment ${status} successfully:`, { appointment_id });
         res.status(200).json({ message: `Appointment ${status} successfully.` });
     } catch (error) {
-        console.error("Error updating appointment status:", error);
+        logger.error('Failed to update appointment status:', error);
         res.status(500).json({ message: "Failed to update appointment status.", error: error.message });
     }
 };
 
+
 // controllers/appointmentController.js
 
 // Function to get all appointments for a client or lawyer
+const logger = require('../utils/logger');
+
 exports.getAppointmentsByUser = async (req, res) => {
     const { user_id } = req.params;
 
@@ -101,17 +99,14 @@ exports.getAppointmentsByUser = async (req, res) => {
             }
         }
 
+        logger.info('Appointments retrieved successfully for user ID:', user_id);
         res.status(200).json({ success: true, data: userAppointments });
     } catch (error) {
-        console.error("Error retrieving appointments by user ID:", error);
+        logger.error('Error retrieving appointments by user ID:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
 
-
-// controllers/appointmentController.js
-
-// Delete an appointment
 exports.deleteAppointment = async (req, res) => {
     const { appointment_id } = req.params;
 
@@ -120,14 +115,16 @@ exports.deleteAppointment = async (req, res) => {
         const appointmentSnapshot = await get(appointmentRef);
 
         if (!appointmentSnapshot.exists()) {
+            logger.error('Appointment not found for deletion:', appointment_id);
             return res.status(404).json({ message: "Appointment not found." });
         }
 
         // Remove the appointment
         await remove(appointmentRef);
+        logger.info('Appointment deleted successfully:', appointment_id);
         res.status(200).json({ message: "Appointment deleted successfully." });
     } catch (error) {
-        console.error("Error deleting appointment:", error);
+        logger.error('Failed to delete appointment:', error);
         res.status(500).json({ message: "Failed to delete appointment.", error: error.message });
     }
 };

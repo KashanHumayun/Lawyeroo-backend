@@ -1,28 +1,37 @@
 const Transport = require('winston-transport');
-const admin = require('firebase-admin');
-const db = admin.database();
+const { ref, push, set } = require('firebase/database');
+const { database } = require('../config/firebaseConfig'); // Make sure this path is correct
 
-module.exports = class FirebaseTransport extends Transport {
-  constructor(opts) {
-    super(opts);
-  }
+class FirebaseTransport extends Transport {
+    constructor(opts) {
+        super(opts);
+        console.log("FirebaseTransport initialized"); // Log when the transport is initialized
+    }
 
-  log(info, callback) {
-    setImmediate(() => {
-      this.emit('logged', info);
-    });
+    log(info, callback) {
+        console.log("Attempting to log:", info); // Display the log information being processed
 
-    // Log entry structure
-    const logEntry = {
-      timestamp: info.timestamp,
-      level: info.level,
-      message: info.message
-    };
+        const logEntry = {
+            timestamp: info.timestamp,
+            level: info.level,
+            message: info.message
+        };
 
-    // Push log entry to Firebase
-    const logsRef = db.ref('logs');
-    logsRef.push(logEntry);
+        const logsRef = ref(database, 'logs'); // Get a reference to the 'logs' node
+        console.log("Firebase reference obtained:", logsRef.toString()); // Log the reference to check correctness
 
-    callback();
-  }
-};
+        const newLogRef = push(logsRef); // Create a new push ID for the log entry
+        console.log("New log reference created:", newLogRef.toString()); // Log the new log reference
+
+        set(newLogRef, logEntry)
+            .then(() => {
+                console.log("Log entry added successfully:", logEntry); // Log success
+                callback(null, true);
+            })
+            .catch(error => {
+                console.error("Failed to add log entry:", error); // Log failure
+                callback(error, false);
+            });
+    }
+}
+module.exports = FirebaseTransport;

@@ -1,19 +1,24 @@
 // questionController.js
 const { ref, push, set, get, child } = require('firebase/database');
 const {database} = require('../config/firebaseConfig');
+const logger = require('../utils/logger');
 
 
-// Create a new question only if the client exists
 exports.createQuestion = async (req, res) => {
+    const { client_id, question_title, question_text } = req.body;
+
+    // Log the attempt to create a new question
+    logger.info("Attempt to create a new question", { client_id, question_title });
+
+    // Validate input for title and text
+    if (!question_title || !question_text) {
+        logger.warn("Validation failed: Question title and text are required.", { client_id });
+        return res.status(400).json({ success: false, message: "Question title and text are required." });
+    }
+
     try {
-        const { client_id, question_title, question_text } = req.body;
-
-        // Validate input for title and text
-        if (!question_title || !question_text) {
-            return res.status(400).json({ success: false, message: "Question title and text are required." });
-        }
-
         console.log("Fetching client with ID:", client_id);
+        logger.debug("Fetching client", { client_id });
 
         // Reference to the clients in the database
         const clientRef = ref(database, `clients/${client_id}`);
@@ -21,7 +26,7 @@ exports.createQuestion = async (req, res) => {
 
         // Check if the client exists
         if (!clientSnapshot.exists()) {
-            console.log("No client found for ID:", client_id);
+            logger.warn("No client found", { client_id });
             return res.status(404).json({ success: false, message: "Client not found" });
         }
 
@@ -35,23 +40,30 @@ exports.createQuestion = async (req, res) => {
         };
 
         await set(newQuestionRef, newQuestion);
+        logger.info("Question created successfully", { client_id, question_id: newQuestionRef.key });
         res.status(201).json({ success: true, data: newQuestion });
     } catch (error) {
-        console.error("Error creating question:", error);
+        logger.error("Error creating question", { client_id, error: error.message });
         res.status(400).json({ success: false, message: error.message });
     }
 };
+
 
 
 // Create an answer
 // Create an answer
 exports.createAnswer = async (req, res) => {
     const { question_id, lawyer_id, lawyer_text } = req.body;
+
+    // Log the attempt to create a new answer
+    logger.info("Attempt to create a new answer", { question_id, lawyer_id });
+
     try {
         // Check if the lawyer exists
         const lawyerRef = ref(database, `lawyers/${lawyer_id}`);
         const lawyerSnapshot = await get(lawyerRef);
         if (!lawyerSnapshot.exists()) {
+            logger.warn("Lawyer not found", { lawyer_id });
             return res.status(404).json({ success: false, message: "Lawyer not found" });
         }
 
@@ -65,35 +77,43 @@ exports.createAnswer = async (req, res) => {
             repliedAt
         });
 
+        logger.info("Answer created successfully", { question_id, lawyer_id, answer_id: newAnswerRef.key });
         res.status(201).json({ success: true, data: { id: newAnswerRef.key, lawyer_id, lawyer_text, repliedAt }});
     } catch (error) {
-        console.error("Error creating answer:", error);
+        logger.error("Error creating answer", { question_id, lawyer_id, error: error.message });
         res.status(400).json({ success: false, message: error.message });
     }
 };
 
 
 
-// Get all answers for a question
 exports.getAnswersByQuestionId = async (req, res) => {
+    const question_id = req.params.question_id; // Extract question ID from request parameters
+
+    logger.info("Fetching answers", { question_id }); // Log the action with the specific question ID
+
     try {
-        const answersRef = ref(database, `answers/${req.params.question_id}`);
+        const answersRef = ref(database, `answers/${question_id}`);
         const answersSnapshot = await get(answersRef);
+
         if (!answersSnapshot.exists()) {
+            logger.warn("No answers found", { question_id }); // Log if no answers are found
             return res.status(404).json({ success: false, message: 'No answers found for this question' });
         }
-        const answers = answersSnapshot.val();
+
+        const answers = answersSnapshot.val(); // Retrieve the answers data
+        logger.info("Answers retrieved successfully", { question_id, count: Object.keys(answers).length }); // Log the count of answers retrieved
         res.status(200).json({ success: true, data: answers });
     } catch (error) {
+        logger.error("Failed to retrieve answers", { question_id, error: error.message }); // Log the error
         res.status(500).json({ success: false, message: error.message });
     }
 };
 
 
-
 exports.getAllQuestionsWithAnswers = async (req, res) => {
+    logger.info("Attempting to fetch all questions with answers");
     try {
-        // Fetch all questions
         const questionsRef = ref(database, 'questions');
         const questionsSnapshot = await get(questionsRef);
         const questions = questionsSnapshot.val();
@@ -103,43 +123,44 @@ exports.getAllQuestionsWithAnswers = async (req, res) => {
             for (const question_id in questions) {
                 const singleQuestion = {...questions[question_id], answers: {}};
 
-                // Fetch client data for each question
                 const clientRef = ref(database, `clients/${questions[question_id].client_id}`);
                 const clientSnapshot = await get(clientRef);
                 if (clientSnapshot.exists()) {
-                    singleQuestion.client = clientSnapshot.val();  // Add client data to question
+                    singleQuestion.client = clientSnapshot.val();
                 }
 
-                // Fetch answers for each question
                 const answersRef = ref(database, `answers/${question_id}`);
                 const answersSnapshot = await get(answersRef);
                 if (answersSnapshot.exists()) {
                     const answers = answersSnapshot.val();
                     for (const answer_id in answers) {
-                        // Fetch lawyer data for each answer
                         const lawyerRef = ref(database, `lawyers/${answers[answer_id].lawyer_id}`);
                         const lawyerSnapshot = await get(lawyerRef);
                         if (lawyerSnapshot.exists()) {
-                            answers[answer_id].lawyer = lawyerSnapshot.val();  // Add lawyer data to answer
+                            answers[answer_id].lawyer = lawyerSnapshot.val();
                         }
                     }
-                    singleQuestion.answers = answers;  // Add answers to question
+                    singleQuestion.answers = answers;
                 }
-                allQuestions[question_id] = singleQuestion;  // Collect all enriched questions
+                allQuestions[question_id] = singleQuestion;
             }
+            logger.info("Successfully fetched all questions with their respective answers");
+        } else {
+            logger.warn("No questions found in database");
         }
 
         res.status(200).json({ success: true, data: allQuestions });
     } catch (error) {
+        logger.error("Failed to retrieve all questions and answers", { error: error.message });
         res.status(500).json({ success: false, message: error.message });
     }
 };
 
 
 exports.getQuestionsByClientId = async (req, res) => {
-    const { client_id } = req.params; // Assuming you pass client_id as a route parameter
+    const { client_id } = req.params;
+    logger.info("Fetching questions for client", { client_id });
     try {
-        // Fetch all questions
         const questionsRef = ref(database, 'questions');
         const questionsSnapshot = await get(questionsRef);
         const questions = questionsSnapshot.val();
@@ -150,62 +171,59 @@ exports.getQuestionsByClientId = async (req, res) => {
                 if (questions[question_id].client_id === client_id) {
                     const singleQuestion = {...questions[question_id], answers: {}};
 
-                    // Fetch answers for each filtered question
                     const answersRef = ref(database, `answers/${question_id}`);
                     const answersSnapshot = await get(answersRef);
                     if (answersSnapshot.exists()) {
                         const answers = answersSnapshot.val();
                         for (const answer_id in answers) {
-                            // Fetch lawyer data for each answer
                             const lawyerRef = ref(database, `lawyers/${answers[answer_id].lawyer_id}`);
                             const lawyerSnapshot = await get(lawyerRef);
                             if (lawyerSnapshot.exists()) {
-                                answers[answer_id].lawyer = lawyerSnapshot.val(); // Add lawyer data to answer
+                                answers[answer_id].lawyer = lawyerSnapshot.val();
                             }
                         }
-                        singleQuestion.answers = answers; // Add answers to question
+                        singleQuestion.answers = answers;
                     }
-                    clientQuestions[question_id] = singleQuestion; // Collect all relevant questions
+                    clientQuestions[question_id] = singleQuestion;
                 }
             }
+            logger.info("Questions retrieved for client", { client_id });
+        } else {
+            logger.warn("No questions found for the specified client", { client_id });
         }
 
         res.status(200).json({ success: true, data: clientQuestions });
     } catch (error) {
-        console.error("Error retrieving questions by client ID:", error);
+        logger.error("Error retrieving questions by client ID", { client_id, error: error.message });
         res.status(500).json({ success: false, message: error.message });
     }
 };
 
 
-// Delete a question and all related answers
+
 exports.deleteQuestion = async (req, res) => {
-    const { question_id } = req.params; // Assuming question_id is passed as a URL parameter
+    const { question_id } = req.params;
+    logger.info("Attempting to delete question and its answers", { question_id });
 
     try {
-        // Reference to the specific question
         const questionRef = ref(database, `questions/${question_id}`);
-        // Check if the question exists
         const questionSnapshot = await get(questionRef);
         if (!questionSnapshot.exists()) {
+            logger.warn("Question not found for deletion", { question_id });
             return res.status(404).json({ success: false, message: "Question not found" });
         }
 
-        // Delete the question
         await set(questionRef, null);
-
-        // Reference to the answers associated with the question
         const answersRef = ref(database, `answers/${question_id}`);
         const answersSnapshot = await get(answersRef);
-
-        // Check if there are answers and delete them
         if (answersSnapshot.exists()) {
             await set(answersRef, null);
         }
 
+        logger.info("Successfully deleted question and its answers", { question_id });
         res.status(200).json({ success: true, message: "Question and all related answers have been deleted successfully." });
     } catch (error) {
-        console.error("Error deleting question and answers:", error);
+        logger.error("Error deleting question and answers", { question_id, error: error.message });
         res.status(500).json({ success: false, message: error.message });
     }
 };

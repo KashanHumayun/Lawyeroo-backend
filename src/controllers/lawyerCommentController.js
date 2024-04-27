@@ -1,5 +1,7 @@
 const { ref, push, set, get, child } = require('firebase/database');
 const { database } = require('../config/firebaseConfig');
+const logger = require('../utils/logger');
+
 
 // Create a lawyer comment
 exports.createLawyerComment = async (req, res) => {
@@ -7,6 +9,7 @@ exports.createLawyerComment = async (req, res) => {
         const { client_id, lawyer_id, comment_text } = req.body;
 
         if (!comment_text) {
+            logger.warn('Attempt to submit an empty comment.');
             return res.status(400).json({ success: false, message: "Comment text is required." });
         }
 
@@ -14,6 +17,7 @@ exports.createLawyerComment = async (req, res) => {
         const clientRef = ref(database, `clients/${client_id}`);
         const clientSnapshot = await get(clientRef);
         if (!clientSnapshot.exists()) {
+            logger.warn(`Client not found: ${client_id}`);
             return res.status(404).json({ success: false, message: "Client not found" });
         }
 
@@ -21,10 +25,11 @@ exports.createLawyerComment = async (req, res) => {
         const lawyerRef = ref(database, `lawyers/${lawyer_id}`);
         const lawyerSnapshot = await get(lawyerRef);
         if (!lawyerSnapshot.exists()) {
+            logger.warn(`Lawyer not found: ${lawyer_id}`);
             return res.status(404).json({ success: false, message: "Lawyer not found" });
         }
 
-        // Both client and lawyer exist, create a new comment reference in the 'lawyer_comments' node
+        // Both client and lawyer exist, create a new comment
         const newCommentRef = push(ref(database, 'lawyer_comments'));
         const createdAt = new Date().toISOString();
         const newComment = {
@@ -34,30 +39,25 @@ exports.createLawyerComment = async (req, res) => {
             created_at: createdAt
         };
 
-        // Save the new comment in the database
         await set(newCommentRef, newComment);
+        logger.info(`New comment added successfully: ${newCommentRef.key}`);
 
-        // Include the comment ID in the response
-        const commentId = newCommentRef.key; // Get the unique key for the new comment
-        const fullCommentData = { ...newComment, comment_id: commentId };
-
-        res.status(201).json({ success: true, data: fullCommentData });
+        res.status(201).json({ success: true, data: { ...newComment, comment_id: newCommentRef.key } });
     } catch (error) {
-        console.error("Error creating lawyer comment:", error);
+        logger.error("Error creating lawyer comment:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
 
-
 // Retrieve all comments for a specific client
 exports.getCommentsByClientId = async (req, res) => {
     try {
-        const { client_id } = req.params; // Assuming client_id is passed as a route parameter
+        const { client_id } = req.params;
 
-        // Check if client exists
         const clientRef = ref(database, `clients/${client_id}`);
         const clientSnapshot = await get(clientRef);
         if (!clientSnapshot.exists()) {
+            logger.warn(`Client not found for comment retrieval: ${client_id}`);
             return res.status(404).json({ success: false, message: "Client not found" });
         }
 
@@ -75,20 +75,25 @@ exports.getCommentsByClientId = async (req, res) => {
         }
 
         if (Object.keys(clientComments).length === 0) {
+            logger.info(`No comments found for client: ${client_id}`);
             return res.status(404).json({ success: false, message: "No comments found for this client" });
         }
 
+        logger.info(`Comments retrieved for client: ${client_id}`);
         res.status(200).json({ success: true, data: clientComments });
     } catch (error) {
-        console.error("Error retrieving comments by client ID:", error);
+        logger.error("Error retrieving comments by client ID:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
 
+
 // Retrieve all comments, their replies, and client data for a specific lawyer
 exports.getCommentsAndRepliesByLawyerId = async (req, res) => {
     try {
-        const { lawyer_id } = req.params; // Assuming lawyer_id is passed as a route parameter
+        const { lawyer_id } = req.params;
+        logger.info(`Fetching comments and replies for lawyer ID: ${lawyer_id}`);
+
         const lawyerCommentsRef = ref(database, 'lawyer_comments');
         const commentsSnapshot = await get(lawyerCommentsRef);
         const allComments = commentsSnapshot.val();
@@ -97,21 +102,20 @@ exports.getCommentsAndRepliesByLawyerId = async (req, res) => {
         if (allComments) {
             for (const comment_id in allComments) {
                 if (allComments[comment_id].lawyer_id === lawyer_id) {
-                    // Initialize the comment structure with client data placeholder
                     lawyerComments[comment_id] = {
                         ...allComments[comment_id],
                         client_data: {},
                         replies: {}
                     };
 
-                    // Fetch client data
                     const clientRef = ref(database, `clients/${allComments[comment_id].client_id}`);
                     const clientSnapshot = await get(clientRef);
                     if (clientSnapshot.exists()) {
                         lawyerComments[comment_id].client_data = clientSnapshot.val();
+                    } else {
+                        logger.warn(`Client not found for comment ID: ${comment_id}`);
                     }
 
-                    // Fetch replies for the comment
                     const repliesRef = ref(database, `lawyer_comments_replies/${comment_id}`);
                     const repliesSnapshot = await get(repliesRef);
                     if (repliesSnapshot.exists()) {
@@ -121,9 +125,10 @@ exports.getCommentsAndRepliesByLawyerId = async (req, res) => {
             }
         }
 
+        logger.info(`Successfully retrieved comments and replies for lawyer ID: ${lawyer_id}`);
         res.status(200).json({ success: true, data: lawyerComments });
     } catch (error) {
-        console.error("Error retrieving comments and replies by lawyer ID:", error);
+        logger.error("Error retrieving comments and replies by lawyer ID:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -133,26 +138,27 @@ exports.getCommentsAndRepliesByLawyerId = async (req, res) => {
 exports.createLawyerCommentReply = async (req, res) => {
     try {
         const { comment_id, lawyer_id, reply_text } = req.body;
+        logger.info(`Creating reply for comment ID: ${comment_id} by lawyer ID: ${lawyer_id}`);
 
         if (!reply_text) {
+            logger.warn('Reply text is required.');
             return res.status(400).json({ success: false, message: "Reply text is required." });
         }
 
-        // Check if the comment exists
         const commentRef = ref(database, `lawyer_comments/${comment_id}`);
         const commentSnapshot = await get(commentRef);
         if (!commentSnapshot.exists()) {
+            logger.warn(`Comment not found: ${comment_id}`);
             return res.status(404).json({ success: false, message: "Comment not found" });
         }
 
-        // Check if the lawyer exists
         const lawyerRef = ref(database, `lawyers/${lawyer_id}`);
         const lawyerSnapshot = await get(lawyerRef);
         if (!lawyerSnapshot.exists()) {
+            logger.warn(`Lawyer not found: ${lawyer_id}`);
             return res.status(404).json({ success: false, message: "Lawyer not found" });
         }
 
-        // Both comment and lawyer exist, create a new reply reference
         const replyRef = push(ref(database, `lawyer_comments_replies/${comment_id}`));
         const repliedAt = new Date().toISOString();
         const newReply = {
@@ -162,26 +168,29 @@ exports.createLawyerCommentReply = async (req, res) => {
         };
 
         await set(replyRef, newReply);
+        logger.info(`Reply created successfully for comment ID: ${comment_id}`);
         res.status(201).json({ success: true, data: newReply });
     } catch (error) {
-        console.error("Error creating reply to lawyer comment:", error);
+        logger.error("Error creating reply to lawyer comment:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
 
 
+
 exports.getRepliesByCommentId = async (req, res) => {
     try {
-        const { comment_id } = req.params; // Assuming comment_id is passed as a route parameter
+        const { comment_id } = req.params;
 
-        // First, check if the comment exists
+        logger.info(`Fetching replies for comment ID: ${comment_id}`);
+
         const commentRef = ref(database, `lawyer_comments/${comment_id}`);
         const commentSnapshot = await get(commentRef);
         if (!commentSnapshot.exists()) {
+            logger.warn(`No comment found for ID: ${comment_id}`);
             return res.status(404).json({ success: false, message: "Comment not found" });
         }
 
-        // If the comment exists, fetch the replies
         const repliesRef = ref(database, `lawyer_comments_replies/${comment_id}`);
         const repliesSnapshot = await get(repliesRef);
         const replies = repliesSnapshot.val();
@@ -191,41 +200,46 @@ exports.getRepliesByCommentId = async (req, res) => {
             for (const reply_id in replies) {
                 commentReplies[reply_id] = replies[reply_id];
             }
+            logger.info(`Replies retrieved successfully for comment ID: ${comment_id}`);
         } else {
-            // If there are no replies, inform the user
+            logger.info(`No replies found for comment ID: ${comment_id}`);
             return res.status(404).json({ success: false, message: "No replies found for this comment" });
         }
 
         res.status(200).json({ success: true, data: commentReplies });
     } catch (error) {
-        console.error("Error retrieving replies by comment ID:", error);
+        logger.error(`Error retrieving replies by comment ID: ${comment_id}`, error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
 
 
-// Delete a lawyer comment and all related replies
 exports.deleteLawyerComment = async (req, res) => {
-    const { comment_id } = req.params; // Assuming comment_id is passed as a URL parameter
+    const { comment_id } = req.params;
 
     try {
+        logger.info(`Attempting to delete comment and its replies for comment ID: ${comment_id}`);
+
         const commentRef = ref(database, `lawyer_comments/${comment_id}`);
         const commentSnapshot = await get(commentRef);
         if (!commentSnapshot.exists()) {
+            logger.warn(`Comment not found for ID: ${comment_id}`);
             return res.status(404).json({ success: false, message: "Comment not found" });
         }
 
         await set(commentRef, null); // Delete the comment
+        logger.info(`Comment deleted successfully for comment ID: ${comment_id}`);
 
         const repliesRef = ref(database, `lawyer_comments_replies/${comment_id}`);
         const repliesSnapshot = await get(repliesRef);
         if (repliesSnapshot.exists()) {
             await set(repliesRef, null); // Delete all replies
+            logger.info(`All related replies deleted for comment ID: ${comment_id}`);
         }
 
         res.status(200).json({ success: true, message: "Comment and all related replies have been deleted successfully." });
     } catch (error) {
-        console.error("Error deleting comment and replies:", error);
+        logger.error(`Error deleting comment and replies for comment ID: ${comment_id}`, error);
         res.status(500).json({ success: false, message: error.message });
     }
 };

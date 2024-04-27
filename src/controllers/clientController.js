@@ -3,6 +3,8 @@ const { ref, set, push, getDatabase ,update, get, remove } = require('firebase/d
 const { ref: storageRef, uploadBytes, getDownloadURL } = require('firebase/storage');
 const { storage, database, getClientByEmail, getLawyerByEmail } = require('../config/firebaseConfig');
 const sendEmail = require('../utils/emailSender');
+const logger = require('../utils/logger');
+
 
 const axios = require('axios');
 const crypto = require('crypto');
@@ -21,53 +23,53 @@ async function uploadImageToFirebaseStorage(fileBuffer, fileName) {
     const fileRef = storageRef(storage, 'images/' + fileName);
     const uploadUrl = `https://firebasestorage.googleapis.com/v0/b/${fileRef.bucket}/o?uploadType=media&name=${encodeURIComponent(fileRef.fullPath)}`;
 
-    console.log("Attempting to upload file:", fileName);
+    logger.info("Attempting to upload file:", fileName);
 
     try {
         const response = await axios.post(uploadUrl, fileBuffer, {
             headers: { 'Content-Type': 'application/octet-stream' }
         });
-        console.log("File uploaded, metadata:", response.data);
+        logger.info("File uploaded, metadata:", response.data);
 
         const url = `https://firebasestorage.googleapis.com/v0/b/${fileRef.bucket}/o/${encodeURIComponent(fileRef.fullPath)}?alt=media`;
-        console.log("Download URL obtained:", url);
+        logger.info("Download URL obtained:", url);
         return url;
     } catch (error) {
-        console.error('Upload failed:', error.response || error.message);
+        logger.error('Upload failed:', error.response || error.message);
         throw new Error('Failed to upload image due to error: ' + error.message);
     }
 }
 
 async function initiateClientRegistration(req, res) {
-    console.log("Received request to initiate Client registration");
+    logger.info("Received request to initiate Client registration");
 
     let { email, password, preferences, ...otherDetails } = req.body;
     
     const clientPreferences = JSON.parse(preferences);
     // Validate email format
     if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
-        console.log("Invalid email format provided:", email);
+        logger.error("Invalid email format provided:", email);
         return res.status(400).json({ message: "Invalid email format." });
     }
 
-        // Check if the email is already used by a lawyer or client
-        try {
-            const isLawyer = await getLawyerByEmail(email);
-            const isClient = await getClientByEmail(email);
-            if (isLawyer) {
-                return res.status(409).json({ message: 'You are already registered as a lawyer.' });
-            }
-            if (isClient) {
-                return res.status(409).json({ message: 'You are already registered as a client.' });
-            }
-        } catch (error) {
-            console.error("Failed to check if email is already registered:", error);
-            return res.status(500).json({ message: 'Failed to check registration status', error: error.message });
+    // Check if the email is already used by a lawyer or client
+    try {
+        const isLawyer = await getLawyerByEmail(email);
+        const isClient = await getClientByEmail(email);
+        if (isLawyer) {
+            return res.status(409).json({ message: 'You are already registered as a lawyer.' });
         }
+        if (isClient) {
+            return res.status(409).json({ message: 'You are already registered as a client.' });
+        }
+    } catch (error) {
+        logger.error("Failed to check if email is already registered:", error);
+        return res.status(500).json({ message: 'Failed to check registration status', error: error.message });
+    }
 
     // Generate OTP
     const otp = crypto.randomInt(100000, 999999).toString();
-    console.log("Generated OTP:", otp);
+    logger.info("Generated OTP:", otp);
 
     // Attempt to send OTP email
     try {
@@ -78,15 +80,15 @@ async function initiateClientRegistration(req, res) {
             html: `<strong>Your OTP is ${otp}</strong>. Please enter this OTP to verify your email address.`
         };
         await sendEmail(message);
-        console.log("OTP email sent to:", email);
+        logger.info("OTP email sent to:", email);
     } catch (error) {
-        console.error("Failed to send OTP email:", error);
+        logger.error("Failed to send OTP email:", error);
         return res.status(500).json({ message: 'Failed to send OTP', error: error.message });
     }
 
     // Hash the password
     const passwordHash = await bcrypt.hash(password, saltRounds);
-    console.log("Password hashed");
+    logger.info("Password hashed");
 
     // Store registration data temporarily in memory
     const tempKey = generateTempKey(email);
@@ -98,73 +100,69 @@ async function initiateClientRegistration(req, res) {
         otpExpires: Date.now() + 300000, // 5 minutes from now
         ...otherDetails
     };
-    console.log("Temporary Client data stored in memory", tempKey);
+    logger.info("Temporary Client data stored in memory", tempKey);
     res.status(200).json({ message: 'OTP sent to your email. Please verify to complete the registration.', tempKey });
 }
 
+
 async function registerClient(req, res) {
     const { tempKey, otp } = req.body;
-    console.log('Received registration request:', { tempKey, otp });
-    if(req.file){
-        console.log('Received picture: nnn');
-    }
-    else{
-        console.log("Picture not receive");
-    }
+    logger.info('Received registration request:', { tempKey, otp });
+    
     if (req.file) {
-        console.log('Received picture:', req.file.originalname);
+        logger.info('Received picture:', req.file.originalname);
     } else {
-        console.log("No picture received.");
+        logger.info("No picture received.");
     }
     
     const entry = tempClientsStorage[tempKey];
-    console.log(entry);
+    logger.info("Temp storage entry:", entry);
     
     if (!entry) {
-        console.log('No registration found for the provided key.');
+        logger.error('No registration found for the provided key.');
         return res.status(404).json({ message: 'Registration not found.' });
     }
 
     if (entry.otp !== otp) {
-        console.log('OTP mismatch.');
+        logger.error('OTP mismatch.');
         return res.status(400).json({ message: 'Invalid or expired OTP.' });
     }
 
     let currentTime = Date.now();
     if (entry.otpExpires < currentTime) {
-        console.log('OTP expired.');
+        logger.error('OTP expired.');
         return res.status(400).json({ message: 'OTP expired.' });
     }
 
-    console.log(`Valid and active entry found: ${tempKey}, registering lawyer...`);
+    logger.info(`Valid and active entry found: ${tempKey}, registering lawyer...`);
 
     let imageUrl = "default.jpg";  // Default image URL if none provided
     if (req.file) {
-        console.log('Uploading profile picture...');
+        logger.info('Uploading profile picture...');
         try {
             imageUrl = await uploadImageToFirebaseStorage(req.file.buffer, req.file.originalname);
-            console.log('Image uploaded successfully:', imageUrl);
+            logger.info('Image uploaded successfully:', imageUrl);
         } catch (error) {
-            console.error('Image upload failed:', error);
+            logger.error('Image upload failed:', error);
             return res.status(500).json({ message: 'Failed to upload image', error: error.message });
         }
     }
 
     const clientData = {
-        ...entry, profile_picture: imageUrl
+        ...entry,
+        profile_picture: imageUrl
     };
 
     const clientRef = push(ref(database, 'clients'));
     await set(clientRef, clientData);
-    console.log('Lawyer data set in database:', clientRef.key);
+    logger.info('Lawyer data set in database:', clientRef.key);
 
     // Clear the temporary data from memory
     delete tempClientsStorage[tempKey];
-    console.log('Temporary data cleared from memory for:', tempKey);
+    logger.info('Temporary data cleared from memory for:', tempKey);
 
     res.status(201).json({ message: 'Lawyer registered successfully.', lawyerId: clientRef.key });
 }
-
 
 
 const addClient = async (req, res) => {
@@ -182,29 +180,29 @@ const addClient = async (req, res) => {
             google_profile = '',
         } = req.body;
 
-        console.log("Parsed data from request:", req.body);
+        logger.info("Parsed data from request:", req.body);
         const clientPreferences = JSON.parse(preferences);
-        console.log("Preferences parsed:", clientPreferences);
+        logger.info("Preferences parsed:", clientPreferences);
 
         let profile_picture = "default.jpg";  // Assume a default if no file
-        if (google_profile){
+        if (google_profile) {
             profile_picture = google_profile;
         }
-        console.log("Default profile picture URL set");
+        logger.info("Default profile picture URL set");
 
         if (req.file) {
-            console.log("Received file with name:", req.file.originalname);
+            logger.info("Received file with name:", req.file.originalname);
             profile_picture = await uploadImageToFirebaseStorage(req.file.buffer, req.file.originalname);
-            console.log("Image successfully uploaded to Firebase Storage, URL:", profile_picture);
+            logger.info("Image successfully uploaded to Firebase Storage, URL:", profile_picture);
         } else {
-            console.log("No file received, using default profile picture.");
+            logger.info("No file received, using default profile picture.");
         }
 
-        console.log("Profile picture URL being saved:", profile_picture);
+        logger.info("Profile picture URL being saved:", profile_picture);
 
         const passwordHash = await bcrypt.hash(password, saltRounds);
-        console.log("Password hashed successfully");
-        
+        logger.info("Password hashed successfully");
+
         const newClient = new Client({
             first_name,
             last_name,
@@ -220,18 +218,19 @@ const addClient = async (req, res) => {
             preferences: clientPreferences
         });
 
-        console.log("New client object:", newClient);
+        logger.info("New client object:", newClient);
 
         const clientRef = push(ref(database, 'clients'));
         await set(clientRef, newClient.serialize());
-        console.log("Client added successfully, ID:", clientRef.key);
+        logger.info("Client added successfully, ID:", clientRef.key);
 
         res.status(201).json({ message: 'Client added successfully', clientId: clientRef.key });
     } catch (error) {
-        console.error("Error in adding client:", error);
+        logger.error("Error in adding client:", error);
         res.status(500).json({ message: 'Error adding client', error: error.message });
     }
 };
+
 
 
 async function getAllClients(req, res) {
@@ -245,6 +244,7 @@ async function getAllClients(req, res) {
         const clientRef = ref(database, 'clients');
         const snapshot = await get(clientRef);
         if (!snapshot.exists()) {
+            logger.info('No clients found');
             return res.status(404).json({ message: 'No clients found' });
         }
 
@@ -268,16 +268,17 @@ async function getAllClients(req, res) {
         });
 
         if (clients.length === 0) {
+            logger.info('No matching clients found');
             return res.status(404).json({ message: 'No matching clients found' });
         }
 
+        logger.info('Clients retrieved successfully:', clients);
         res.status(200).json(clients);
     } catch (error) {
-        console.error("Error retrieving clients with filters:", error);
+        logger.error("Error retrieving clients with filters:", error);
         res.status(500).json({ message: 'Error retrieving clients', error: error.message });
     }
 }
-
 
 async function updateClient(req, res) {
     const clientId = req.params.id;
@@ -294,35 +295,43 @@ async function updateClient(req, res) {
         return res.status(400).json({ message: "Invalid phone number format." });
     }
 
-
     const clientRef = ref(database, `clients/${clientId}`);
 
     // Check if the lawyer exists before updating
     const existingSnapshot = await get(clientRef);
     if (!existingSnapshot.exists()) {
+        logger.error('No such client found');
         return res.status(404).json({ message: 'No such client found' });
     }
 
     // Handle file upload
     if (req.file) {
-        console.log('Received picture:', req.file.originalname);
-        const imageUrl = await uploadImageToFirebaseStorage(req.file.buffer, req.file.originalname);
-        updates.profile_picture = imageUrl; // Ensure this is added to a plain object
-        console.log('Image uploaded successfully:', imageUrl);
+        logger.info('Received picture:', req.file.originalname);
+        try {
+            const imageUrl = await uploadImageToFirebaseStorage(req.file.buffer, req.file.originalname);
+            updates.profile_picture = imageUrl; // Ensure this is added to a plain object
+            logger.info('Image uploaded successfully:', imageUrl);
+        } catch (error) {
+            logger.error('Image upload failed:', error);
+            return res.status(500).json({ message: 'Failed to upload image', error: error.message });
+        }
     }
 
-    console.log("Updates to be applied:", updates);
+    logger.info("Updates to be applied:", updates);
     await update(clientRef, updates);
-    console.log('Lawyer updated successfully:', updates);
+    logger.info('Client updated successfully:', updates);
 
     // Fetch updated data to return in response
     const updatedSnapshot = await get(clientRef);
     if (updatedSnapshot.exists()) {
+        logger.info('Client updated successfully:', updatedSnapshot.val());
         return res.status(200).json({ message: 'Client updated successfully', data: updatedSnapshot.val() });
     } else {
-        return res.status(404).json({ message: 'Failed to update lawyer' });
+        logger.error('Failed to update client');
+        return res.status(404).json({ message: 'Failed to update client' });
     }
 }
+
 
 async function getClientById(req, res) {
     const clientId = req.params.id;  // The ID of the client is expected to be part of the URL path
@@ -333,14 +342,14 @@ async function getClientById(req, res) {
         const clientSnapshot = await get(clientRef);
         if (clientSnapshot.exists()) {
             const clientData = clientSnapshot.val();
-            console.log(`Client data retrieved successfully for ID: ${clientId}`);
+            logger.info(`Client data retrieved successfully for ID: ${clientId}`);
             res.status(200).json(clientData);
         } else {
-            console.log(`No client found with ID: ${clientId}`);
+            logger.info(`No client found with ID: ${clientId}`);
             res.status(404).json({ message: 'Client not found' });
         }
     } catch (error) {
-        console.error(`Error retrieving client by ID ${clientId}:`, error);
+        logger.error(`Error retrieving client by ID ${clientId}:`, error);
         res.status(500).json({ message: 'Failed to retrieve client', error: error.toString() });
     }
 }
@@ -356,12 +365,14 @@ async function addFavoriteLawyer(req, res) {
             lawyer_id,
             added_at
         });
+        logger.info('Lawyer added to favorites successfully');
         res.status(201).json({ message: 'Lawyer added to favorites successfully' });
     } catch (error) {
-        console.error('Failed to add favorite lawyer:', error);
+        logger.error('Failed to add favorite lawyer:', error);
         res.status(500).json({ message: 'Failed to add favorite lawyer', error: error.toString() });
     }
 }
+
 
 async function deleteFavoriteLawyer(req, res) {
     const { client_id, lawyer_id } = req.params;
@@ -370,9 +381,10 @@ async function deleteFavoriteLawyer(req, res) {
 
     try {
         await remove(favoriteRef);
+        logger.info('Lawyer removed from favorites successfully');
         res.status(200).json({ message: 'Lawyer removed from favorites successfully' });
     } catch (error) {
-        console.error('Failed to remove favorite lawyer:', error);
+        logger.error('Failed to remove favorite lawyer:', error);
         res.status(500).json({ message: 'Failed to remove favorite lawyer', error: error.toString() });
     }
 }
@@ -404,12 +416,14 @@ async function getAllFavoriteLawyers(req, res) {
 
             // Wait for all promises to resolve
             const lawyers = await Promise.all(lawyerDetailsPromises);
+            logger.info('Favorite lawyers retrieved successfully:', lawyers);
             res.status(200).json(lawyers);
         } else {
+            logger.info('No favorite lawyers found');
             res.status(404).json({ message: 'No favorite lawyers found' });
         }
     } catch (error) {
-        console.error('Failed to retrieve favorite lawyers:', error);
+        logger.error('Failed to retrieve favorite lawyers:', error);
         res.status(500).json({ message: 'Failed to retrieve favorite lawyers', error: error.toString() });
     }
 }
