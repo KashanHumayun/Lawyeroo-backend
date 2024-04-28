@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const upload = require('../middleware/fileUpload'); // This imports multer configuration
 const authenticateTokenAndRole = require('../middleware/authenticateTokenAndRole'); // Adjust the path as necessary
-const { addLawyer,initiateLawyerRegistration, registerLawyer,getLawyerById,  getAllLawyers, uploadTestController, updateLawyer, addRating, updateRating, getAllRatingsByLawyerWithClients ,deleteRating} = require('../controllers/lawyerController');
+const { addLawyer,initiateLawyerRegistration, registerLawyer,getLawyerById,  getAllLawyers, uploadTestController, updateLawyer, addRating, updateRating, getAllRatingsByLawyerWithClients ,deleteRating, getViewsByLawyerId, addViewToLawyerProfile} = require('../controllers/lawyerController');
 
 // POST endpoint to add a new lawyer. Includes multer middleware for handling file uploads
 router.post('/add-lawyer', upload.single('profile_picture'), addLawyer);
@@ -30,6 +30,12 @@ router.post('/ratings', authenticateTokenAndRole(['clients','admins']), addRatin
 router.put('/ratings/:rating_id', authenticateTokenAndRole(['clients','admins']),updateRating);
 router.delete('/ratings/:rating_id',authenticateTokenAndRole(['clients', 'admins']), deleteRating);
 router.get('/ratings/:lawyer_id',authenticateTokenAndRole(['clients','lawyers', 'admins']),getAllRatingsByLawyerWithClients);
+// Route to add a view to a lawyer's profile
+router.post('/add-view', authenticateTokenAndRole(['clients', 'lawyers', 'admins']), addViewToLawyerProfile);
+
+// Route to get all views for a specific lawyer
+router.get('/:lawyer_id/views', authenticateTokenAndRole(['lawyers', 'admins', 'clients']), getViewsByLawyerId);
+
 module.exports = router;
 
 

@@ -31,21 +31,22 @@ const generateToken = (user) => {
     }, JWT_SECRET, { expiresIn: '1h' }); // Token expires in one hour
 };
 
-exports.login = async (req, res) => {
+const login = async (req, res) => {
     const { email, password } = req.body;
-    logger.info("Attempting login", { email });
-
-    if (!email || !password) {
-        logger.warn("Email or password not provided", { email });
-        return res.status(400).json({ message: "Email and password are required." });
-    }
+    console.log("email and password ",email, password);
+        // Check if email and password are provided
+        if (!email || !password) {
+            return res.status(400).json({ message: "Email and password are required." });
+        }
+    
+    const database = getDatabase();
 
     try {
         let userFound = false;
         let userData = null;
         let userType = '';
-        const userTypes = ['admins', 'lawyers', 'clients'];
 
+        const userTypes = ['admins', 'lawyers', 'clients'];
         for (const type of userTypes) {
             const usersRef = ref(database, type);
             const userQuery = query(usersRef, orderByChild('email'), equalTo(email));
@@ -54,7 +55,7 @@ exports.login = async (req, res) => {
             if (snapshot.exists()) {
                 snapshot.forEach((childSnapshot) => {
                     userData = childSnapshot.val();
-                    userData.id = childSnapshot.key;
+                    userData.id = childSnapshot.key; // Capture the user's Firebase ID
                     userType = type;
                 });
                 userFound = true;
@@ -63,31 +64,41 @@ exports.login = async (req, res) => {
         }
 
         if (!userFound) {
-            logger.warn("User not found during login", { email });
             return res.status(404).json({ message: 'Email does not exist.' });
         }
 
+        // Verify hashed password
         const passwordIsValid = await bcrypt.compare(password, userData.passwordHash);
         if (!passwordIsValid) {
-            logger.warn("Invalid password attempt", { email });
             return res.status(401).json({ message: 'Invalid password.' });
         }
 
-        const token = generateToken({ id: userData.id, email, userType });
-        logger.info("Login successful", { email, userType });
-        res.status(200).json({ message: 'Login successful', token, userType, userData });
+        // Generate JWT Token
+        const token = generateToken({
+            id: userData.id,
+            email,
+            userType
+        });
+
+        // Login successful, return token and user data
+        res.status(200).json({
+            message: 'Login successful',
+            token,
+            userType,
+            userData
+        });
     } catch (error) {
-        logger.error("Login error", { email, error: error.message });
+        console.error('Login error:', error);
         res.status(500).json({ message: 'Error logging in', error: error.message });
     }
 };
 
-exports.sendResetPasswordCode = async (req, res) => {
+async function sendResetPasswordCode(req, res) {
     const { email } = req.body;
-    logger.info("Request to send reset password code", { email });
+    console.log('Email:', email);
 
+    // Validate email format
     if (!email || !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email.trim())) {
-        logger.warn("Invalid email format provided for password reset", { email });
         return res.status(400).json({ message: "Invalid email format." });
     }
 
@@ -95,17 +106,26 @@ exports.sendResetPasswordCode = async (req, res) => {
         let userType = null;
         const lawyer = await getLawyerByEmail(email);
         const client = await getClientByEmail(email);
+        
+        if (lawyer) {
+            userType = 'lawyers';
+        } else if (client) {
+            userType = 'clients';
+        }
 
-        userType = lawyer ? 'lawyers' : client ? 'clients' : null;
         if (!userType) {
-            logger.warn("User not found for password reset", { email });
             return res.status(404).json({ message: "No user found with this email." });
         }
 
+        // Generate OTP and expiration
         const otp = crypto.randomInt(100000, 999999).toString();
-        const otpExpires = Date.now() + 300000; // 5 minutes
+        const otpExpires = Date.now() + 300000; // OTP expires in 5 minutes
+
+        console.log("Generated OTP:", otp); // Display the generated OTP
+        console.log("OTP expiration time:", new Date(otpExpires).toLocaleString()); // Display the expiration time
 
         storeOtp(email, otp, otpExpires, userType);
+
         const message = {
             to: email,
             subject: 'Password Reset Code',
@@ -114,19 +134,17 @@ exports.sendResetPasswordCode = async (req, res) => {
         };
 
         await sendEmail(message);
-        logger.info("Password reset code sent successfully", { email });
+        console.log("Password reset code sent to:", email);
         res.status(200).json({ message: 'Password reset code sent to your email.' });
     } catch (error) {
-        logger.error("Error in sending reset password code", { email, error: error.message });
+        console.error("Error in sending reset password code:", error);
         res.status(500).json({ message: "Failed to send password reset code.", error: error.message });
     }
-};
-
+}
 async function updateUserPassword(email, passwordHash) {
     const database = getDatabase();
     const otpData = otpStore[email];
     if (!otpData) {
-        logger.error("OTP data not found for email, cannot update password", { email });
         throw new Error("OTP data not found, cannot update password.");
     }
 
@@ -136,35 +154,30 @@ async function updateUserPassword(email, passwordHash) {
     const snapshot = await get(userQuery);
 
     if (!snapshot.exists()) {
-        logger.error("No user found with this email to update the password", { email });
+        console.error("No user found with this email to update the password.");
         throw new Error("User not found");
     }
 
     snapshot.forEach(async (childSnapshot) => {
         const userKey = childSnapshot.key;
-        const updatePath = { [`${userType}/${userKey}/passwordHash`]: passwordHash };
-        try {
-            await update(ref(database), updatePath);
-            logger.info("Password updated for user", { userType, email, userKey });
-        } catch (error) {
-            logger.error("Failed to update password for user", { userType, email, userKey, error: error.message });
-        }
+        const updatePath = {};
+        updatePath[`${userType}/${userKey}/passwordHash`] = passwordHash;
+        await update(ref(database), updatePath); // Update the password hash at the specific path
+        console.log(`Password updated for ${userType} with email: ${email}`);
     });
 }
 
-
+// Reset a user's password after verifying their OTP
 async function resetPassword(req, res) {
     const { email, otp, newPassword } = req.body;
 
     if (!email || !otp || !newPassword) {
-        logger.warn("Attempt to reset password with missing fields", { email, otpProvided: !!otp });
         return res.status(400).json({ message: "Missing fields. Email, OTP, and new password are required." });
     }
 
     const otpData = otpStore[email];
 
     if (!otpData || otpData.otp !== otp || Date.now() > otpData.otpExpires) {
-        logger.warn("Invalid or expired OTP used for password reset", { email, otp });
         return res.status(400).json({ message: "Invalid or expired OTP." });
     }
 
@@ -175,10 +188,10 @@ async function resetPassword(req, res) {
         // Clear OTP from store after successful reset
         delete otpStore[email];
 
-        logger.info("Password successfully updated after reset", { email });
+        console.log("Password updated for:", email);
         res.status(200).json({ message: 'Password updated successfully.' });
     } catch (error) {
-        logger.error("Error in resetting password", { email, error: error.message });
+        console.error("Error in resetting password:", error);
         res.status(500).json({ message: "Failed to reset password.", error: error.message });
     }
 }

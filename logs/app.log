@@ -1,0 +1,45 @@
+{
+  "timestamp": "2024-04-28T05:47:44.329Z",
+  "level": "info",
+  "message": "Report added successfully"
+}
+{
+  "timestamp": "2024-04-28T07:55:37.770Z",
+  "level": "info",
+  "message": "Attempt to create a new question"
+}
+{
+  "timestamp": "2024-04-28T07:55:38.870Z",
+  "level": "info",
+  "message": "Question created successfully"
+}
+{
+  "timestamp": "2024-04-28T07:56:50.828Z",
+  "level": "info",
+  "message": "Attempt to create a new question"
+}
+{
+  "timestamp": "2024-04-28T07:56:53.010Z",
+  "level": "info",
+  "message": "Question created successfully"
+}
+{
+  "timestamp": "2024-04-28T08:01:38.384Z",
+  "level": "info",
+  "message": "Rating added successfully"
+}
+{
+  "timestamp": "2024-04-28T08:01:39.422Z",
+  "level": "info",
+  "message": "Updated lawyer -Nvs0D2WqXpuqNOCnLEC with new average rating: 4.50"
+}
+{
+  "timestamp": "2024-04-28T09:20:56.182Z",
+  "level": "info",
+  "message": "View added successfully: -NwZ-H2d2lCCZrjJu0Yc"
+}
+{
+  "timestamp": "2024-04-28T09:28:39.875Z",
+  "level": "info",
+  "message": "Views retrieved successfully for lawyer ID: -Nvs0D2WqXpuqNOCnLEC"
+}

@@ -4,7 +4,7 @@ const { ref: storageRef, uploadBytes, getDownloadURL } = require('firebase/stora
 const { storage, database, getClientByEmail, getLawyerByEmail } = require('../config/firebaseConfig');
 const sendEmail = require('../utils/emailSender');
 const logger = require('../utils/logger');
-
+const lawyer_interactions = require('../utils/lawyerInteraction');
 
 const axios = require('axios');
 const crypto = require('crypto');
@@ -365,6 +365,7 @@ async function addFavoriteLawyer(req, res) {
             lawyer_id,
             added_at
         });
+        lawyer_interactions.addInteraction(lawyer_id, client_id, "favorite");
         logger.info('Lawyer added to favorites successfully');
         res.status(201).json({ message: 'Lawyer added to favorites successfully' });
     } catch (error) {

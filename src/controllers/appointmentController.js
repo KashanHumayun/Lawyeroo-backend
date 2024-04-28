@@ -3,7 +3,7 @@ const { ref, push, set, get, child, remove, update } = require('firebase/databas
 const { database } = require('../config/firebaseConfig');
 const schedule = require('node-schedule');
 const logger = require('../utils/logger');
-
+const lawyer_interactions = require('../utils/lawyerInteraction');
 
 // Utility to send notifications (pseudo-code)
 const sendNotification = async (userId, message) => {
@@ -29,7 +29,7 @@ exports.createAppointment = async (req, res) => {
         if (!clientSnapshot.exists() || !lawyerSnapshot.exists()) {
             return res.status(404).json({ message: "Client or Lawyer not found." });
         }
-
+        lawyer_interactions.addInteraction(client_id, lawyer_id, 'appointment')
         // Create the appointment
         const appointmentRef = push(ref(database, 'appointments'));
         const newAppointment = {
@@ -80,7 +80,6 @@ exports.updateAppointmentStatus = async (req, res) => {
 // controllers/appointmentController.js
 
 // Function to get all appointments for a client or lawyer
-const logger = require('../utils/logger');
 
 exports.getAppointmentsByUser = async (req, res) => {
     const { user_id } = req.params;
@@ -110,6 +109,7 @@ exports.getAppointmentsByUser = async (req, res) => {
 exports.deleteAppointment = async (req, res) => {
     const { appointment_id } = req.params;
 
+    
     try {
         const appointmentRef = ref(database, `appointments/${appointment_id}`);
         const appointmentSnapshot = await get(appointmentRef);

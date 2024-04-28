@@ -1,5 +1,5 @@
 const { createLogger, format } = require('winston');
-const FirebaseTransport = require('./FirebaseTransport');
+const FileTransport = require('./FirebaseTransport');
 
 const logger = createLogger({
     format: format.combine(
@@ -7,9 +7,10 @@ const logger = createLogger({
         format.json()
     ),
     transports: [
-        new FirebaseTransport()
+        new FileTransport()
     ]
 });
+
 
 
 module.exports = logger;

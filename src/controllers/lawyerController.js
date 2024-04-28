@@ -8,7 +8,7 @@ const sendEmail = require('../utils/emailSender');
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const logger = require('../utils/logger');
-
+const lawyer_interactions = require('../utils/lawyerInteraction');
 
 
 // const database = getDatabase();
@@ -124,7 +124,6 @@ async function uploadImageToFirebaseStorage(fileBuffer, originalFileName) {
 }
 
 
-const logger = require('../utils/logger');
 
 async function registerLawyer(req, res) {
     const { tempKey, otp } = req.body;
@@ -380,6 +379,7 @@ async function addRating(req, res) {
 
     try {
         await set(ratingRef, ratingData);
+        lawyer_interactions.addInteraction(client_id, lawyer_id, 'rating');
         logger.info('Rating added successfully', { ratingId: ratingRef.key, lawyer_id, client_id });
         await updateLawyerRatingOnAdd(lawyer_id, ratings);
         res.status(201).json({ message: 'Rating added successfully', ratingId: ratingRef.key });
@@ -617,4 +617,68 @@ async function getAllRatingsByLawyerWithClients(req, res) {
 
 
 
-module.exports = { addLawyer, getAllLawyers, getLawyerById, registerLawyer, initiateLawyerRegistration, uploadTestController, updateLawyer, addRating, updateRating,getAllRatingsByLawyerWithClients, deleteRating };
+// Function to add a view to a lawyer's profile
+async function addViewToLawyerProfile (req, res)  {
+    const { client_id, lawyer_id } = req.body;
+
+    if (!client_id || !lawyer_id) {
+        logger.error('Missing client_id or lawyer_id');
+        return res.status(400).json({ message: 'Client ID and Lawyer ID are required.' });
+    }
+
+    try {
+        const viewsRef = ref(database, 'lawyer_profile_views');
+        const newViewRef = push(viewsRef);
+        const added_at = new Date().toISOString();
+
+        const viewData = {
+            client_id,
+            lawyer_id,
+            added_at
+        };
+
+        await set(newViewRef, viewData);
+        logger.info(`View added successfully: ${newViewRef.key}`);
+        res.status(201).json({ message: 'Profile view added successfully', viewId: newViewRef.key });
+    } catch (error) {
+        logger.error('Error adding profile view', error);
+        res.status(500).json({ message: 'Failed to add profile view', error: error.toString() });
+    }
+};
+
+// Function to get all views for a specific lawyer
+async function getViewsByLawyerId (req, res) {
+    const { lawyer_id } = req.params; // Assume lawyer_id is passed as a URL parameter
+
+    const viewsRef = ref(database, 'lawyer_profile_views');
+    try {
+        const viewsSnapshot = await get(viewsRef);
+        let views = [];
+        if (viewsSnapshot.exists()) {
+            viewsSnapshot.forEach((childSnapshot) => {
+                const view = childSnapshot.val();
+                if (view.lawyer_id === lawyer_id) {
+                    views.push({
+                        view_id: childSnapshot.key,
+                        ...view
+                    });
+                }
+            });
+        }
+
+        if (views.length === 0) {
+            logger.info('No views found for this lawyer');
+            return res.status(404).json({ message: 'No views found for this lawyer' });
+        }
+
+        logger.info(`Views retrieved successfully for lawyer ID: ${lawyer_id}`);
+        res.status(200).json(views);
+    } catch (error) {
+        logger.error('Error retrieving views by lawyer ID', error);
+        res.status(500).json({ message: 'Failed to retrieve views', error: error.toString() });
+    }
+};
+
+module.exports = { addLawyer, getAllLawyers, getLawyerById, registerLawyer, initiateLawyerRegistration, 
+    uploadTestController, updateLawyer, addRating, updateRating,getAllRatingsByLawyerWithClients,
+     deleteRating, addViewToLawyerProfile, getViewsByLawyerId };

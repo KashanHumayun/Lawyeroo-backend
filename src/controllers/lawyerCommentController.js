@@ -1,7 +1,7 @@
 const { ref, push, set, get, child } = require('firebase/database');
 const { database } = require('../config/firebaseConfig');
 const logger = require('../utils/logger');
-
+const lawyer_interactions = require('../utils/lawyerInteraction');
 
 // Create a lawyer comment
 exports.createLawyerComment = async (req, res) => {
@@ -38,7 +38,7 @@ exports.createLawyerComment = async (req, res) => {
             comment_text,
             created_at: createdAt
         };
-
+        lawyer_interactions.addInteraction(client_id, lawyer_id, 'comment');
         await set(newCommentRef, newComment);
         logger.info(`New comment added successfully: ${newCommentRef.key}`);
 

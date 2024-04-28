@@ -1,7 +1,7 @@
 const { ref, set, get, update, remove, query, orderByKey, equalTo } = require('firebase/database');
 const { database } = require('../config/firebaseConfig');
 const logger = require('../utils/logger');
-
+const lawyer_interactions = require('../utils/lawyerInteraction');
 
 async function addCase(req, res) {
     const { client_id, lawyer_id, case_name, case_details, case_type, case_status } = req.body;
@@ -29,6 +29,7 @@ async function addCase(req, res) {
 
         // If both exist, proceed to create the case
         const caseRef = ref(database, 'cases/' + Date.now()); // Using current timestamp as a simple unique ID
+        lawyer_interactions.addInteraction(client_id, lawyer_id, "case");
         await set(caseRef, {
             client_id,
             lawyer_id,

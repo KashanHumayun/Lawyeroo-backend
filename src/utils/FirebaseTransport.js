@@ -1,11 +1,19 @@
 const Transport = require('winston-transport');
-const { ref, push, set } = require('firebase/database');
-const { database } = require('../config/firebaseConfig'); // Make sure this path is correct
+const { createLogger, format } = require('winston');
+const fs = require('fs');
+const path = require('path');
+const logsDirectory = path.join(__dirname, '..', '..', 'logs');
+const logFilePath = path.join(logsDirectory, 'app.log');
 
-class FirebaseTransport extends Transport {
+// Ensure that the logs directory exists
+if (!fs.existsSync(logsDirectory)) {
+    fs.mkdirSync(logsDirectory);
+}
+
+class FileTransport extends Transport {
     constructor(opts) {
         super(opts);
-        console.log("FirebaseTransport initialized"); // Log when the transport is initialized
+        console.log("FileTransport initialized"); // Log when the transport is initialized
     }
 
     log(info, callback) {
@@ -17,21 +25,21 @@ class FirebaseTransport extends Transport {
             message: info.message
         };
 
-        const logsRef = ref(database, 'logs'); // Get a reference to the 'logs' node
-        console.log("Firebase reference obtained:", logsRef.toString()); // Log the reference to check correctness
+        const logString = JSON.stringify(logEntry, null, 2); // Convert log entry to JSON string with pretty formatting
 
-        const newLogRef = push(logsRef); // Create a new push ID for the log entry
-        console.log("New log reference created:", newLogRef.toString()); // Log the new log reference
-
-        set(newLogRef, logEntry)
-            .then(() => {
-                console.log("Log entry added successfully:", logEntry); // Log success
+        // Append the log string to the file
+        fs.appendFile(logFilePath, logString + '\n', (err) => {
+            if (err) {
+                console.error("Failed to append log entry to file:", err); // Log failure
+                callback(err, false);
+            } else {
+                console.log("Log entry added to file successfully:", logEntry); // Log success
                 callback(null, true);
-            })
-            .catch(error => {
-                console.error("Failed to add log entry:", error); // Log failure
-                callback(error, false);
-            });
+            }
+        });
     }
 }
-module.exports = FirebaseTransport;
+
+
+
+module.exports = FileTransport;
