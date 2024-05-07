@@ -177,7 +177,6 @@ exports.createLawyerCommentReply = async (req, res) => {
 };
 
 
-
 exports.getRepliesByCommentId = async (req, res) => {
     try {
         const { comment_id } = req.params;
@@ -240,6 +239,30 @@ exports.deleteLawyerComment = async (req, res) => {
         res.status(200).json({ success: true, message: "Comment and all related replies have been deleted successfully." });
     } catch (error) {
         logger.error(`Error deleting comment and replies for comment ID: ${comment_id}`, error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.deleteLawyerCommentReply = async (req, res) => {
+    const { comment_id, reply_id } = req.params;
+
+    try {
+        logger.info(`Attempting to delete reply for comment ID: ${comment_id}, reply ID: ${reply_id}`);
+
+        // Check if the reply exists
+        const replyRef = ref(database, `lawyer_comments_replies/${comment_id}/${reply_id}`);
+        const replySnapshot = await get(replyRef);
+        if (!replySnapshot.exists()) {
+            logger.warn(`Reply not found for ID: ${reply_id} under comment ID: ${comment_id}`);
+            return res.status(404).json({ success: false, message: "Reply not found" });
+        }
+
+        await set(replyRef, null); // Delete the reply
+        logger.info(`Reply deleted successfully for reply ID: ${reply_id} under comment ID: ${comment_id}`);
+
+        res.status(200).json({ success: true, message: "Reply has been deleted successfully." });
+    } catch (error) {
+        logger.error(`Error deleting reply for reply ID: ${reply_id} under comment ID: ${comment_id}`, error);
         res.status(500).json({ success: false, message: error.message });
     }
 };

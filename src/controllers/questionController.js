@@ -110,7 +110,6 @@ exports.getAnswersByQuestionId = async (req, res) => {
     }
 };
 
-
 exports.getAllQuestionsWithAnswers = async (req, res) => {
     logger.info("Attempting to fetch all questions with answers");
     try {
@@ -199,8 +198,6 @@ exports.getQuestionsByClientId = async (req, res) => {
     }
 };
 
-
-
 exports.deleteQuestion = async (req, res) => {
     const { question_id } = req.params;
     logger.info("Attempting to delete question and its answers", { question_id });
@@ -224,6 +221,27 @@ exports.deleteQuestion = async (req, res) => {
         res.status(200).json({ success: true, message: "Question and all related answers have been deleted successfully." });
     } catch (error) {
         logger.error("Error deleting question and answers", { question_id, error: error.message });
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.deleteAnswer = async (req, res) => {
+    const { question_id, answer_id } = req.params;
+    logger.info("Attempting to delete answer", { question_id, answer_id });
+
+    try {
+        const answerRef = ref(database, `answers/${question_id}/${answer_id}`);
+        const answerSnapshot = await get(answerRef);
+        if (!answerSnapshot.exists()) {
+            logger.warn("Answer not found for deletion", { question_id, answer_id });
+            return res.status(404).json({ success: false, message: "Answer not found" });
+        }
+
+        await set(answerRef, null);
+        logger.info("Successfully deleted answer", { question_id, answer_id });
+        res.status(200).json({ success: true, message: "Answer has been deleted successfully." });
+    } catch (error) {
+        logger.error("Error deleting answer", { question_id, answer_id, error: error.message });
         res.status(500).json({ success: false, message: error.message });
     }
 };

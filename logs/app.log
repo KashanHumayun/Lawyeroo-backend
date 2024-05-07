@@ -653,3 +653,48 @@
   "level": "info",
   "message": "Lawyers retrieved successfully"
 }
+{
+  "timestamp": "2024-05-07T11:01:50.247Z",
+  "level": "info",
+  "message": "Attempting to delete answer"
+}
+{
+  "timestamp": "2024-05-07T11:01:50.616Z",
+  "level": "info",
+  "message": "Successfully deleted answer"
+}
+{
+  "timestamp": "2024-05-07T11:17:51.749Z",
+  "level": "info",
+  "message": "Fetching comments and replies for lawyer ID: -Nvs0D2WqXpuqNOCnLEC"
+}
+{
+  "timestamp": "2024-05-07T11:17:53.428Z",
+  "level": "info",
+  "message": "Successfully retrieved comments and replies for lawyer ID: -Nvs0D2WqXpuqNOCnLEC"
+}
+{
+  "timestamp": "2024-05-07T11:19:09.178Z",
+  "level": "info",
+  "message": "Attempting to delete reply for comment ID: -NwNG0PLCpTsKJXGCJDq, reply ID: -NwNP9qrFNGC_VSA1P8l"
+}
+{
+  "timestamp": "2024-05-07T11:19:10.648Z",
+  "level": "info",
+  "message": "Reply deleted successfully for reply ID: -NwNP9qrFNGC_VSA1P8l under comment ID: -NwNG0PLCpTsKJXGCJDq"
+}
+{
+  "timestamp": "2024-05-07T11:19:36.198Z",
+  "level": "info",
+  "message": "Attempting to delete comment and its replies for comment ID: -NwNG0PLCpTsKJXGCJDq"
+}
+{
+  "timestamp": "2024-05-07T11:19:36.560Z",
+  "level": "info",
+  "message": "Comment deleted successfully for comment ID: -NwNG0PLCpTsKJXGCJDq"
+}
+{
+  "timestamp": "2024-05-07T11:19:36.864Z",
+  "level": "info",
+  "message": "All related replies deleted for comment ID: -NwNG0PLCpTsKJXGCJDq"
+}

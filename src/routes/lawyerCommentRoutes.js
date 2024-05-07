@@ -9,7 +9,8 @@ const {
     createLawyerCommentReply,
     getRepliesByCommentId,
     deleteLawyerComment,
-    getCommentsAndRepliesByLawyerId
+    getCommentsAndRepliesByLawyerId,
+    deleteLawyerCommentReply
 } = require('../controllers/lawyerCommentController');
 
 // Routes for creating, fetching, and managing lawyer comments and replies
@@ -31,5 +32,8 @@ router.delete('/:comment_id', authenticateTokenAndRole(['clients', 'lawyers', 'a
 
 // Get all comments and their replies for a specific lawyer, including client data
 router.get('/lawyer/:lawyer_id', authenticateTokenAndRole(['clients', 'lawyers', 'admins']), getCommentsAndRepliesByLawyerId);
+
+// Delete a reply to a lawyer comment
+router.delete('/:comment_id/replies/:reply_id', authenticateTokenAndRole(['lawyers', 'admins']), deleteLawyerCommentReply);
 
 module.exports = router;

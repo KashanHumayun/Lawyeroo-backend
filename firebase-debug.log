@@ -37,3 +37,24 @@ You're about to initialize a Firebase project in this directory:
     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
 [error] 
 [error] Error: Failed to create project. See firebase-debug.log for more info.
+[debug] [2024-05-06T17:38:34.266Z] ----------------------------------------------------------------------
+[debug] [2024-05-06T17:38:34.278Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\khan\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js init
+[debug] [2024-05-06T17:38:34.280Z] CLI Version:   13.8.0
+[debug] [2024-05-06T17:38:34.281Z] Platform:      win32
+[debug] [2024-05-06T17:38:34.281Z] Node Version:  v20.5.0
+[debug] [2024-05-06T17:38:34.282Z] Time:          Mon May 06 2024 22:38:34 GMT+0500 (Pakistan Standard Time)
+[debug] [2024-05-06T17:38:34.283Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2024-05-06T17:38:34.313Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2024-05-06T17:38:34.315Z] > authorizing via signed-in user (chaudharykashi68@gmail.com)
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  C:\Users\khan\Desktop\FYP\back-end
+

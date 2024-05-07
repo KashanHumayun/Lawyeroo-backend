@@ -7,11 +7,12 @@ const {
     createAnswer,
     getAllQuestionsWithAnswers,
     getQuestionsByClientId,
-    deleteQuestion
+    deleteQuestion,
+    deleteAnswer
 } = require('../controllers/questionController');  // Adjust the path as necessary
 // Route to create a new question, accessible only by clients
 
-router.post('/', authenticateTokenAndRole(['clients']), createQuestion);
+router.post('/', authenticateTokenAndRole(['clients', 'admins']), createQuestion);
 // Route to create a new answer, accessible only by lawyers
 
 router.post('/answers', authenticateTokenAndRole(['clients', 'lawyers']), createAnswer);
@@ -24,5 +25,7 @@ router.get('/client/:client_id', authenticateTokenAndRole(['clients']), getQuest
 //Route to delete questions by question ID, accessible only by clients
 
 router.delete('/:question_id', authenticateTokenAndRole(['clients']), deleteQuestion);
+
+router.delete('/:question_id/answers/:answer_id', authenticateTokenAndRole(['lawyers', 'admins']), deleteAnswer);
 
 module.exports = router;
