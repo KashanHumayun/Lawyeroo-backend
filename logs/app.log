@@ -43,3 +43,613 @@
   "level": "info",
   "message": "Views retrieved successfully for lawyer ID: -Nvs0D2WqXpuqNOCnLEC"
 }
+{
+  "timestamp": "2024-04-30T13:20:17.175Z",
+  "level": "info",
+  "message": "Clients retrieved successfully:"
+}
+{
+  "timestamp": "2024-04-30T13:20:17.672Z",
+  "level": "info",
+  "message": "Clients retrieved successfully:"
+}
+{
+  "timestamp": "2024-04-30T13:20:19.593Z",
+  "level": "info",
+  "message": "Admins retrieved successfully"
+}
+{
+  "timestamp": "2024-04-30T13:20:20.032Z",
+  "level": "info",
+  "message": "Admins retrieved successfully"
+}
+{
+  "timestamp": "2024-04-30T13:20:52.341Z",
+  "level": "info",
+  "message": "Admins retrieved successfully"
+}
+{
+  "timestamp": "2024-04-30T13:20:52.779Z",
+  "level": "info",
+  "message": "Admins retrieved successfully"
+}
+{
+  "timestamp": "2024-04-30T13:20:54.480Z",
+  "level": "info",
+  "message": "Clients retrieved successfully:"
+}
+{
+  "timestamp": "2024-04-30T13:20:54.952Z",
+  "level": "info",
+  "message": "Clients retrieved successfully:"
+}
+{
+  "timestamp": "2024-04-30T13:20:57.857Z",
+  "level": "info",
+  "message": "Admins retrieved successfully"
+}
+{
+  "timestamp": "2024-04-30T13:20:58.303Z",
+  "level": "info",
+  "message": "Admins retrieved successfully"
+}
+{
+  "timestamp": "2024-04-30T13:21:02.851Z",
+  "level": "info",
+  "message": "Admins retrieved successfully"
+}
+{
+  "timestamp": "2024-04-30T13:21:03.366Z",
+  "level": "info",
+  "message": "Admins retrieved successfully"
+}
+{
+  "timestamp": "2024-04-30T13:21:06.864Z",
+  "level": "info",
+  "message": "Clients retrieved successfully:"
+}
+{
+  "timestamp": "2024-04-30T13:21:07.338Z",
+  "level": "info",
+  "message": "Clients retrieved successfully:"
+}
+{
+  "timestamp": "2024-04-30T13:21:09.058Z",
+  "level": "info",
+  "message": "Admins retrieved successfully"
+}
+{
+  "timestamp": "2024-04-30T13:21:09.501Z",
+  "level": "info",
+  "message": "Admins retrieved successfully"
+}
+{
+  "timestamp": "2024-04-30T13:21:30.457Z",
+  "level": "info",
+  "message": "Clients retrieved successfully:"
+}
+{
+  "timestamp": "2024-04-30T13:21:30.929Z",
+  "level": "info",
+  "message": "Clients retrieved successfully:"
+}
+{
+  "timestamp": "2024-04-30T13:21:49.462Z",
+  "level": "info",
+  "message": "Admins retrieved successfully"
+}
+{
+  "timestamp": "2024-04-30T13:21:49.897Z",
+  "level": "info",
+  "message": "Admins retrieved successfully"
+}
+{
+  "timestamp": "2024-04-30T13:22:03.129Z",
+  "level": "info",
+  "message": "Clients retrieved successfully:"
+}
+{
+  "timestamp": "2024-04-30T13:22:03.601Z",
+  "level": "info",
+  "message": "Clients retrieved successfully:"
+}
+{
+  "timestamp": "2024-04-30T13:22:05.732Z",
+  "level": "info",
+  "message": "Admins retrieved successfully"
+}
+{
+  "timestamp": "2024-04-30T13:22:06.172Z",
+  "level": "info",
+  "message": "Admins retrieved successfully"
+}
+{
+  "timestamp": "2024-04-30T14:40:42.105Z",
+  "level": "info",
+  "message": "Admins retrieved successfully"
+}
+{
+  "timestamp": "2024-04-30T14:40:43.067Z",
+  "level": "info",
+  "message": "Admins retrieved successfully"
+}
+{
+  "timestamp": "2024-04-30T15:23:22.332Z",
+  "level": "info",
+  "message": "Admins retrieved successfully"
+}
+{
+  "timestamp": "2024-04-30T15:23:22.526Z",
+  "level": "info",
+  "message": "Admins retrieved successfully"
+}
+{
+  "timestamp": "2024-05-06T06:42:13.491Z",
+  "level": "info",
+  "message": "Attempting to fetch all questions with answers"
+}
+{
+  "timestamp": "2024-05-06T06:42:19.350Z",
+  "level": "info",
+  "message": "Successfully fetched all questions with their respective answers"
+}
+{
+  "timestamp": "2024-05-07T06:07:32.101Z",
+  "level": "info",
+  "message": "Received request to initiate Client registration"
+}
+{
+  "timestamp": "2024-05-07T06:07:33.364Z",
+  "level": "info",
+  "message": "Generated OTP:"
+}
+{
+  "timestamp": "2024-05-07T06:07:35.308Z",
+  "level": "info",
+  "message": "OTP email sent to:"
+}
+{
+  "timestamp": "2024-05-07T06:07:35.384Z",
+  "level": "info",
+  "message": "Password hashed"
+}
+{
+  "timestamp": "2024-05-07T06:07:35.386Z",
+  "level": "info",
+  "message": "Temporary Client data stored in memory"
+}
+{
+  "timestamp": "2024-05-07T06:08:51.686Z",
+  "level": "info",
+  "message": "Received registration request:"
+}
+{
+  "timestamp": "2024-05-07T06:08:51.687Z",
+  "level": "info",
+  "message": "No picture received."
+}
+{
+  "timestamp": "2024-05-07T06:08:51.688Z",
+  "level": "error",
+  "message": "No registration found for the provided key."
+}
+{
+  "timestamp": "2024-05-07T06:08:51.687Z",
+  "level": "info",
+  "message": "Temp storage entry:"
+}
+{
+  "timestamp": "2024-05-07T06:10:28.763Z",
+  "level": "info",
+  "message": "Received request to initiate Client registration"
+}
+{
+  "timestamp": "2024-05-07T06:10:29.130Z",
+  "level": "info",
+  "message": "Generated OTP:"
+}
+{
+  "timestamp": "2024-05-07T06:10:30.527Z",
+  "level": "info",
+  "message": "OTP email sent to:"
+}
+{
+  "timestamp": "2024-05-07T06:10:30.603Z",
+  "level": "info",
+  "message": "Password hashed"
+}
+{
+  "timestamp": "2024-05-07T06:10:30.604Z",
+  "level": "info",
+  "message": "Temporary Client data stored in memory"
+}
+{
+  "timestamp": "2024-05-07T06:11:14.783Z",
+  "level": "info",
+  "message": "Received request to initiate Client registration"
+}
+{
+  "timestamp": "2024-05-07T06:11:34.738Z",
+  "level": "info",
+  "message": "Received request to initiate Client registration"
+}
+{
+  "timestamp": "2024-05-07T06:11:35.428Z",
+  "level": "info",
+  "message": "Generated OTP:"
+}
+{
+  "timestamp": "2024-05-07T06:11:37.278Z",
+  "level": "info",
+  "message": "OTP email sent to:"
+}
+{
+  "timestamp": "2024-05-07T06:11:37.351Z",
+  "level": "info",
+  "message": "Password hashed"
+}
+{
+  "timestamp": "2024-05-07T06:11:37.352Z",
+  "level": "info",
+  "message": "Temporary Client data stored in memory"
+}
+{
+  "timestamp": "2024-05-07T06:12:33.298Z",
+  "level": "info",
+  "message": "Received registration request:"
+}
+{
+  "timestamp": "2024-05-07T06:12:33.301Z",
+  "level": "info",
+  "message": "No picture received."
+}
+{
+  "timestamp": "2024-05-07T06:12:33.301Z",
+  "level": "info",
+  "message": "Temp storage entry:"
+}
+{
+  "timestamp": "2024-05-07T06:12:33.301Z",
+  "level": "error",
+  "message": "No registration found for the provided key."
+}
+{
+  "timestamp": "2024-05-07T06:14:07.125Z",
+  "level": "info",
+  "message": "Received request to initiate Client registration"
+}
+{
+  "timestamp": "2024-05-07T06:14:08.298Z",
+  "level": "info",
+  "message": "Generated OTP:"
+}
+{
+  "timestamp": "2024-05-07T06:14:09.658Z",
+  "level": "info",
+  "message": "OTP email sent to:"
+}
+{
+  "timestamp": "2024-05-07T06:14:09.728Z",
+  "level": "info",
+  "message": "Password hashed"
+}
+{
+  "timestamp": "2024-05-07T06:14:09.729Z",
+  "level": "info",
+  "message": "Temporary Client data stored in memory"
+}
+{
+  "timestamp": "2024-05-07T06:14:53.269Z",
+  "level": "info",
+  "message": "Received registration request:"
+}
+{
+  "timestamp": "2024-05-07T06:14:53.271Z",
+  "level": "info",
+  "message": "No picture received."
+}
+{
+  "timestamp": "2024-05-07T06:14:53.271Z",
+  "level": "error",
+  "message": "No registration found for the provided key."
+}
+{
+  "timestamp": "2024-05-07T06:14:53.271Z",
+  "level": "info",
+  "message": "Temp storage entry:"
+}
+{
+  "timestamp": "2024-05-07T06:21:02.014Z",
+  "level": "info",
+  "message": "Received registration request:"
+}
+{
+  "timestamp": "2024-05-07T06:21:02.017Z",
+  "level": "info",
+  "message": "No picture received."
+}
+{
+  "timestamp": "2024-05-07T06:21:02.017Z",
+  "level": "info",
+  "message": "Temp storage entry:"
+}
+{
+  "timestamp": "2024-05-07T06:21:02.017Z",
+  "level": "error",
+  "message": "No registration found for the provided key."
+}
+{
+  "timestamp": "2024-05-07T06:21:04.129Z",
+  "level": "info",
+  "message": "Received registration request:"
+}
+{
+  "timestamp": "2024-05-07T06:21:04.131Z",
+  "level": "info",
+  "message": "No picture received."
+}
+{
+  "timestamp": "2024-05-07T06:21:04.131Z",
+  "level": "info",
+  "message": "Temp storage entry:"
+}
+{
+  "timestamp": "2024-05-07T06:21:04.131Z",
+  "level": "error",
+  "message": "No registration found for the provided key."
+}
+{
+  "timestamp": "2024-05-07T06:21:08.456Z",
+  "level": "info",
+  "message": "Received request to initiate Client registration"
+}
+{
+  "timestamp": "2024-05-07T06:21:08.683Z",
+  "level": "info",
+  "message": "Generated OTP:"
+}
+{
+  "timestamp": "2024-05-07T06:21:10.952Z",
+  "level": "info",
+  "message": "OTP email sent to:"
+}
+{
+  "timestamp": "2024-05-07T06:21:11.030Z",
+  "level": "info",
+  "message": "Password hashed"
+}
+{
+  "timestamp": "2024-05-07T06:21:11.031Z",
+  "level": "info",
+  "message": "Temporary Client data stored in memory"
+}
+{
+  "timestamp": "2024-05-07T06:22:11.160Z",
+  "level": "info",
+  "message": "Received registration request:"
+}
+{
+  "timestamp": "2024-05-07T06:22:11.162Z",
+  "level": "info",
+  "message": "No picture received."
+}
+{
+  "timestamp": "2024-05-07T06:22:11.162Z",
+  "level": "info",
+  "message": "Temp storage entry:"
+}
+{
+  "timestamp": "2024-05-07T06:22:11.162Z",
+  "level": "error",
+  "message": "No registration found for the provided key."
+}
+{
+  "timestamp": "2024-05-07T06:24:38.751Z",
+  "level": "info",
+  "message": "Generated OTP:"
+}
+{
+  "timestamp": "2024-05-07T06:24:40.715Z",
+  "level": "info",
+  "message": "Temporary Client data stored in memory"
+}
+{
+  "timestamp": "2024-05-07T06:26:28.833Z",
+  "level": "info",
+  "message": "Client data set in database:"
+}
+{
+  "timestamp": "2024-05-07T06:26:28.837Z",
+  "level": "info",
+  "message": "Temporary data cleared from memory for:"
+}
+{
+  "timestamp": "2024-05-07T09:10:17.450Z",
+  "level": "info",
+  "message": "Fetching all lawyers with filters"
+}
+{
+  "timestamp": "2024-05-07T09:10:19.065Z",
+  "level": "error",
+  "message": "Error retrieving lawyers with filters"
+}
+{
+  "timestamp": "2024-05-07T09:45:25.076Z",
+  "level": "info",
+  "message": "Fetching all lawyers with filters"
+}
+{
+  "timestamp": "2024-05-07T09:45:26.210Z",
+  "level": "info",
+  "message": "Lawyers retrieved successfully"
+}
+{
+  "timestamp": "2024-05-07T09:47:42.753Z",
+  "level": "info",
+  "message": "Fetching all lawyers with filters"
+}
+{
+  "timestamp": "2024-05-07T09:47:42.976Z",
+  "level": "info",
+  "message": "No matching lawyers found after applying filters"
+}
+{
+  "timestamp": "2024-05-07T09:47:50.866Z",
+  "level": "info",
+  "message": "Fetching all lawyers with filters"
+}
+{
+  "timestamp": "2024-05-07T09:47:51.075Z",
+  "level": "info",
+  "message": "No matching lawyers found after applying filters"
+}
+{
+  "timestamp": "2024-05-07T09:48:13.370Z",
+  "level": "info",
+  "message": "Fetching all lawyers with filters"
+}
+{
+  "timestamp": "2024-05-07T09:48:13.581Z",
+  "level": "info",
+  "message": "No matching lawyers found after applying filters"
+}
+{
+  "timestamp": "2024-05-07T09:48:30.745Z",
+  "level": "info",
+  "message": "Fetching all lawyers with filters"
+}
+{
+  "timestamp": "2024-05-07T09:48:30.942Z",
+  "level": "info",
+  "message": "No matching lawyers found after applying filters"
+}
+{
+  "timestamp": "2024-05-07T10:08:36.335Z",
+  "level": "info",
+  "message": "Fetching all lawyers with filters"
+}
+{
+  "timestamp": "2024-05-07T10:08:37.642Z",
+  "level": "info",
+  "message": "No matching lawyers found after applying filters"
+}
+{
+  "timestamp": "2024-05-07T10:08:44.091Z",
+  "level": "info",
+  "message": "Fetching all lawyers with filters"
+}
+{
+  "timestamp": "2024-05-07T10:08:44.379Z",
+  "level": "info",
+  "message": "Lawyers retrieved successfully"
+}
+{
+  "timestamp": "2024-05-07T10:09:42.774Z",
+  "level": "info",
+  "message": "Fetching all lawyers with filters"
+}
+{
+  "timestamp": "2024-05-07T10:09:43.034Z",
+  "level": "error",
+  "message": "Error retrieving lawyers with filters"
+}
+{
+  "timestamp": "2024-05-07T10:13:42.169Z",
+  "level": "info",
+  "message": "Fetching all lawyers with filters"
+}
+{
+  "timestamp": "2024-05-07T10:13:44.329Z",
+  "level": "info",
+  "message": "Lawyers retrieved successfully"
+}
+{
+  "timestamp": "2024-05-07T10:14:07.477Z",
+  "level": "info",
+  "message": "Fetching all lawyers with filters"
+}
+{
+  "timestamp": "2024-05-07T10:14:07.942Z",
+  "level": "info",
+  "message": "Lawyers retrieved successfully"
+}
+{
+  "timestamp": "2024-05-07T10:14:26.525Z",
+  "level": "info",
+  "message": "Fetching all lawyers with filters"
+}
+{
+  "timestamp": "2024-05-07T10:14:26.761Z",
+  "level": "info",
+  "message": "No matching lawyers found after applying filters"
+}
+{
+  "timestamp": "2024-05-07T10:14:37.873Z",
+  "level": "info",
+  "message": "Fetching all lawyers with filters"
+}
+{
+  "timestamp": "2024-05-07T10:14:38.223Z",
+  "level": "info",
+  "message": "No matching lawyers found after applying filters"
+}
+{
+  "timestamp": "2024-05-07T10:14:54.538Z",
+  "level": "info",
+  "message": "Fetching all lawyers with filters"
+}
+{
+  "timestamp": "2024-05-07T10:14:54.840Z",
+  "level": "info",
+  "message": "Lawyers retrieved successfully"
+}
+{
+  "timestamp": "2024-05-07T10:15:12.337Z",
+  "level": "info",
+  "message": "Fetching all lawyers with filters"
+}
+{
+  "timestamp": "2024-05-07T10:15:12.582Z",
+  "level": "info",
+  "message": "Lawyers retrieved successfully"
+}
+{
+  "timestamp": "2024-05-07T10:15:51.437Z",
+  "level": "info",
+  "message": "Fetching all lawyers with filters"
+}
+{
+  "timestamp": "2024-05-07T10:15:51.955Z",
+  "level": "info",
+  "message": "No matching lawyers found after applying filters"
+}
+{
+  "timestamp": "2024-05-07T10:21:23.633Z",
+  "level": "info",
+  "message": "Fetching all lawyers with filters"
+}
+{
+  "timestamp": "2024-05-07T10:21:24.970Z",
+  "level": "info",
+  "message": "Lawyers retrieved successfully"
+}
+{
+  "timestamp": "2024-05-07T10:21:34.598Z",
+  "level": "info",
+  "message": "Fetching all lawyers with filters"
+}
+{
+  "timestamp": "2024-05-07T10:21:34.812Z",
+  "level": "info",
+  "message": "Lawyers retrieved successfully"
+}
+{
+  "timestamp": "2024-05-07T10:21:44.385Z",
+  "level": "info",
+  "message": "Fetching all lawyers with filters"
+}
+{
+  "timestamp": "2024-05-07T10:21:44.614Z",
+  "level": "info",
+  "message": "Lawyers retrieved successfully"
+}

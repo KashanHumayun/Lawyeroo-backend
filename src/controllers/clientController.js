@@ -23,16 +23,16 @@ async function uploadImageToFirebaseStorage(fileBuffer, fileName) {
     const fileRef = storageRef(storage, 'images/' + fileName);
     const uploadUrl = `https://firebasestorage.googleapis.com/v0/b/${fileRef.bucket}/o?uploadType=media&name=${encodeURIComponent(fileRef.fullPath)}`;
 
-    logger.info("Attempting to upload file:", fileName);
+    // logger.info("Attempting to upload file:", fileName);
 
     try {
         const response = await axios.post(uploadUrl, fileBuffer, {
             headers: { 'Content-Type': 'application/octet-stream' }
         });
-        logger.info("File uploaded, metadata:", response.data);
+        // logger.info("File uploaded, metadata:", response.data);
 
         const url = `https://firebasestorage.googleapis.com/v0/b/${fileRef.bucket}/o/${encodeURIComponent(fileRef.fullPath)}?alt=media`;
-        logger.info("Download URL obtained:", url);
+        // logger.info("Download URL obtained:", url);
         return url;
     } catch (error) {
         logger.error('Upload failed:', error.response || error.message);
@@ -41,14 +41,14 @@ async function uploadImageToFirebaseStorage(fileBuffer, fileName) {
 }
 
 async function initiateClientRegistration(req, res) {
-    logger.info("Received request to initiate Client registration");
+    // logger.info("Received request to initiate Client registration");
 
     let { email, password, preferences, ...otherDetails } = req.body;
     
     const clientPreferences = JSON.parse(preferences);
     // Validate email format
     if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
-        logger.error("Invalid email format provided:", email);
+        // logger.error("Invalid email format provided:", email);
         return res.status(400).json({ message: "Invalid email format." });
     }
 
@@ -63,14 +63,14 @@ async function initiateClientRegistration(req, res) {
             return res.status(409).json({ message: 'You are already registered as a client.' });
         }
     } catch (error) {
-        logger.error("Failed to check if email is already registered:", error);
+        // logger.error("Failed to check if email is already registered:", error);
         return res.status(500).json({ message: 'Failed to check registration status', error: error.message });
     }
 
     // Generate OTP
     const otp = crypto.randomInt(100000, 999999).toString();
-    logger.info("Generated OTP:", otp);
-
+    // logger.info("Generated OTP:", otp);
+    console.log('Generated OTP', otp);
     // Attempt to send OTP email
     try {
         const message = {
@@ -80,15 +80,15 @@ async function initiateClientRegistration(req, res) {
             html: `<strong>Your OTP is ${otp}</strong>. Please enter this OTP to verify your email address.`
         };
         await sendEmail(message);
-        logger.info("OTP email sent to:", email);
+        // logger.info("OTP email sent to:", email);
     } catch (error) {
-        logger.error("Failed to send OTP email:", error);
+        // logger.error("Failed to send OTP email:", error);
         return res.status(500).json({ message: 'Failed to send OTP', error: error.message });
     }
 
     // Hash the password
     const passwordHash = await bcrypt.hash(password, saltRounds);
-    logger.info("Password hashed");
+    // logger.info("Password hashed");
 
     // Store registration data temporarily in memory
     const tempKey = generateTempKey(email);
@@ -100,31 +100,34 @@ async function initiateClientRegistration(req, res) {
         otpExpires: Date.now() + 300000, // 5 minutes from now
         ...otherDetails
     };
-    logger.info("Temporary Client data stored in memory", tempKey);
+    // logger.info("Temporary Client data stored in memory", tempKey);
+    console.log("Temporary Client data stored in memory", tempKey);
+    console.log('Generated OTP', otp);
+
     res.status(200).json({ message: 'OTP sent to your email. Please verify to complete the registration.', tempKey });
 }
 
 
 async function registerClient(req, res) {
     const { tempKey, otp } = req.body;
-    logger.info('Received registration request:', { tempKey, otp });
+    console.log('Received registration request:', { tempKey, otp });
     
     if (req.file) {
-        logger.info('Received picture:', req.file.originalname);
+        console.log('Received picture:', req.file.originalname);
     } else {
-        logger.info("No picture received.");
+        console.log("No picture received.");
     }
     
     const entry = tempClientsStorage[tempKey];
-    logger.info("Temp storage entry:", entry);
+    console.log("Temp storage entry:", entry);
     
     if (!entry) {
-        logger.error('No registration found for the provided key.');
+        // logger.error('No registration found for the provided key.');
         return res.status(404).json({ message: 'Registration not found.' });
     }
 
     if (entry.otp !== otp) {
-        logger.error('OTP mismatch.');
+        // logger.error('OTP mismatch.');
         return res.status(400).json({ message: 'Invalid or expired OTP.' });
     }
 
@@ -134,16 +137,16 @@ async function registerClient(req, res) {
         return res.status(400).json({ message: 'OTP expired.' });
     }
 
-    logger.info(`Valid and active entry found: ${tempKey}, registering lawyer...`);
+    // logger.info(`Valid and active entry found: ${tempKey}, registering client...`);
 
     let imageUrl = "default.jpg";  // Default image URL if none provided
     if (req.file) {
-        logger.info('Uploading profile picture...');
+        // logger.info('Uploading profile picture...');
         try {
             imageUrl = await uploadImageToFirebaseStorage(req.file.buffer, req.file.originalname);
-            logger.info('Image uploaded successfully:', imageUrl);
+            // logger.info('Image uploaded successfully:', imageUrl);
         } catch (error) {
-            logger.error('Image upload failed:', error);
+            // logger.error('Image upload failed:', error);
             return res.status(500).json({ message: 'Failed to upload image', error: error.message });
         }
     }
@@ -155,13 +158,13 @@ async function registerClient(req, res) {
 
     const clientRef = push(ref(database, 'clients'));
     await set(clientRef, clientData);
-    logger.info('Lawyer data set in database:', clientRef.key);
+    logger.info('Client data set in database:', clientRef.key);
 
     // Clear the temporary data from memory
     delete tempClientsStorage[tempKey];
     logger.info('Temporary data cleared from memory for:', tempKey);
 
-    res.status(201).json({ message: 'Lawyer registered successfully.', lawyerId: clientRef.key });
+    res.status(201).json({ message: 'Client registered successfully.', lawyerId: clientRef.key });
 }
 
 

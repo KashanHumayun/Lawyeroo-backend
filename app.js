@@ -1,12 +1,19 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const http = require('http');
+
 const { OAuth2Client } = require('google-auth-library');
 const { google } = require('googleapis'); // Import the google object from googleapis
 const { storage, database, getLawyerByEmail, getClientByEmail } = require('./src/config/firebaseConfig');
 const { addClient } = require('./src/controllers/clientController');
 const { addLawyer } = require('./src/controllers/lawyerController');
 const app = express();
+const server = http.createServer(app);
+
+const socketIo = require('socket.io'); // Make sure you import socket.io
+
+const io = socketIo(server);
 
 // Google OAuth Client Setup
 const CLIENT_ID = process.env.CLIENT_ID;
@@ -112,6 +119,40 @@ app.get('/auth/google/callback', async (req, res) => {
         res.status(500).send('Authentication failed');
     }
 });
+
+// WebRTC Signaling Routes
+io.on('connection', socket => {
+    console.log('New connection: ' + socket.id);
+
+    // Handle signaling messages
+    socket.on('offer', (data) => {
+        console.log('Received offer:', data);
+        // Forward offer to the intended recipient
+        io.to(data.toId).emit('offer', data);
+    });
+
+    socket.on('answer', (data) => {
+        console.log('Received answer:', data);
+        // Forward answer to the intended recipient
+        io.to(data.toId).emit('answer', data);
+    });
+
+    socket.on('candidate', (data) => {
+        console.log('Received ICE candidate:', data);
+        // Forward ICE candidate to the intended recipient
+        io.to(data.toId).emit('candidate', data);
+    });
+
+    // Handle disconnects
+    socket.on('disconnect', () => {
+        console.log('User disconnected: ' + socket.id);
+    });
+});
+
+// Routes (if unchanged)
+
+
+
 
 // Route handlers
 app.use('/api/admins', adminRoutes);

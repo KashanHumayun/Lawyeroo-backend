@@ -71,4 +71,4 @@ function getAdminByEmail(email) {
       throw error;
     });
 }
-module.exports = { database, storage, getLawyerByEmail, getClientByEmail, getAdminByEmail };
+module.exports = { database, storage, getLawyerByEmail, getClientByEmail, getAdminByEmail, getAdminByEmail };

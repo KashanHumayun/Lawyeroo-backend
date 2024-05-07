@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { getDatabase, ref, query, orderByChild, equalTo, get, update } = require('firebase/database');
-const { getLawyerByEmail, getClientByEmail } = require('../config/firebaseConfig');
+const { getLawyerByEmail, getClientByEmail, getAdminByEmail } = require('../config/firebaseConfig');
 const crypto = require('crypto');
 const saltRounds = 10;
 const logger = require('../utils/logger');

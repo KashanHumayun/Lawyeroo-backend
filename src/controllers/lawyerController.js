@@ -231,10 +231,28 @@ async function addLawyer(req, res) {
         res.status(500).json({ message: 'Error adding lawyer', error: error.message });
     }
 }
+const predefinedSpecializations = [
+    "Personal Injury Lawyer",
+    "Estate Planning Lawyer",
+    "Bankruptcy Lawyer",
+    "Intellectual Property Lawyer",
+    "Employment Lawyer",
+    "Corporate Lawyer",
+    "Immigration Lawyer",
+    "Criminal Lawyer",
+    "Medical Malpractice Lawyer",
+    "Tax Lawyer",
+    "Family Lawyer",
+    "Worker's Compensation Lawyer",
+    "Contract Lawyer",
+    "Social Security Disability Lawyer",
+    "Civil Litigation Lawyer",
+    "General Practice Lawyer"
+];
 
 async function getAllLawyers(req, res) {
-    const filters = req.query;
-    logger.info("Fetching all lawyers with filters", { filters });
+    const { keyword, yearsOfExperience, rating, specializations, ...otherFilters } = req.query;
+    logger.info("Fetching all lawyers with filters", { keyword, yearsOfExperience, rating, specializations, otherFilters });
 
     try {
         const lawyerRef = ref(database, 'lawyers');
@@ -245,7 +263,47 @@ async function getAllLawyers(req, res) {
             return res.status(404).json({ message: 'No lawyers found' });
         }
 
-        let lawyers = applyLawyerFilters(snapshot.val(), filters);
+        let lawyers = Object.values(snapshot.val());
+
+        // Keyword search
+        if (keyword) {
+            lawyers = lawyers.filter(lawyer => {
+                const name = `${lawyer.first_name} ${lawyer.last_name}`.toLowerCase();
+                const university = lawyer.universities.toLowerCase();
+                const specializationsText = Array.isArray(lawyer.specializations) ?
+                    lawyer.specializations.join(', ').toLowerCase() :
+                    (lawyer.specializations || '').toLowerCase();
+                return name.includes(keyword.toLowerCase()) ||
+                    university.includes(keyword.toLowerCase()) ||
+                    specializationsText.includes(keyword.toLowerCase());
+            });
+        }
+
+        // Years of experience filter
+        if (yearsOfExperience) {
+            lawyers = lawyers.filter(lawyer => lawyer.years_of_experience >= parseInt(yearsOfExperience));
+        }
+
+        // Rating filter
+        if (rating) {
+            lawyers = lawyers.filter(lawyer => lawyer.rating >= parseFloat(rating));
+        }
+
+        // Specializations filter
+        if (specializations) {
+            const specializationArray = specializations.split(',').map(s => s.trim());
+            const validSpecializations = specializationArray.filter(s => predefinedSpecializations.includes(s));
+            lawyers = lawyers.filter(lawyer => {
+                const lawyerSpecializations = Array.isArray(lawyer.specializations) ?
+                    lawyer.specializations :
+                    [lawyer.specializations];
+                return validSpecializations.every(s => lawyerSpecializations.includes(s));
+            });
+        }
+
+        // Apply other filters
+        lawyers = applyLawyerFilters(lawyers, otherFilters);
+
         if (lawyers.length === 0) {
             logger.info("No matching lawyers found after applying filters");
             return res.status(404).json({ message: 'No matching lawyers found' });
@@ -259,6 +317,18 @@ async function getAllLawyers(req, res) {
     }
 }
 
+
+
+function applyLawyerFilters(lawyers, filters) {
+    return lawyers.filter(lawyer => {
+        for (const key in filters) {
+            if (filters[key] && lawyer[key] != filters[key]) {
+                return false;
+            }
+        }
+        return true;
+    });
+}
 
 
 

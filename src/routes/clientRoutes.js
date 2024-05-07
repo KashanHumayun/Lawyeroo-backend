@@ -25,7 +25,7 @@ router.get('/', getAllClients);
 router.post('/register-client', upload.single('profile_picture'), initiateClientRegistration);
 
 // POST endpoint to complete registration after OTP verification
-router.post('/register-complete', registerClient);
+router.post('/register-complete', upload.single('profile_picture'), registerClient);
 
 router.put('/update-client/:id', authenticateTokenAndRole(['clients', 'admins']), upload.single('profile_picture'), updateClient);
 
