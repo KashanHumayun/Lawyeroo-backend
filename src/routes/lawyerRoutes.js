@@ -40,10 +40,10 @@ router.get('/:lawyer_id/views', authenticateTokenAndRole(['lawyers', 'admins', '
 
 
 // POST endpoint to create a lawyer verification
-router.post('/lawyer-verification', authenticateTokenAndRole(['admins']), createLawyerVerification);
+router.post('/lawyer-verification', authenticateTokenAndRole(['admins', 'lawyers']), createLawyerVerification);
 
 // DELETE endpoint to delete a lawyer verification
-router.delete('/lawyer-verification/:lawyer_id', authenticateTokenAndRole(['admins']), deleteLawyerVerification);
+router.delete('/lawyer-verification/:lawyer_id', authenticateTokenAndRole(['admins',  'lawyers']), deleteLawyerVerification);
 
 module.exports = router;
 
