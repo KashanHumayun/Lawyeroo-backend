@@ -25,10 +25,11 @@ async function initiateLawyerRegistration(req, res) {
     logger.info("Received request to initiate lawyer registration");
 
     let { email, password, specializations, ...otherDetails } = req.body;
+    let parsedSpecializations = [];
 
     // Parse specializations safely
     try {
-        let parsedSpecializations = JSON.parse(specializations);
+        parsedSpecializations = JSON.parse(specializations);
         if (!Array.isArray(parsedSpecializations)) {
             throw new Error("Specializations must be an array.");
         }
@@ -93,8 +94,6 @@ async function initiateLawyerRegistration(req, res) {
     logger.info("Temporary lawyer data stored in memory", { tempKey });
     res.status(200).json({ message: 'OTP sent to your email. Please verify to complete the registration.', tempKey });
 }
-
-
 
 
 // Environment variable check (usually placed in your initial setup, not within a request handler)
@@ -749,6 +748,50 @@ async function getViewsByLawyerId (req, res) {
     }
 };
 
+async function createLawyerVerification(req, res) {
+    const { lawyer_id, first_name, last_name, registration_no } = req.body;
+
+    // Validate input
+    if (!lawyer_id || !first_name || !last_name || !registration_no) {
+        return res.status(400).json({ message: "All fields are required." });
+    }
+
+    const verificationRef = ref(database, `lawyer_verification/${lawyer_id}`);
+    const verificationData = {
+        first_name,
+        last_name,
+        registration_no
+    };
+
+    try {
+        await set(verificationRef, verificationData);
+        logger.info("Lawyer verification created successfully", { lawyer_id });
+        return res.status(201).json({ message: "Verification created successfully.", verificationData });
+    } catch (error) {
+        logger.error("Failed to create verification", { error: error.message });
+        return res.status(500).json({ message: "Failed to create verification", error: error.message });
+    }
+}
+
+async function deleteLawyerVerification(req, res) {
+    const { lawyer_id } = req.params;
+
+    if (!lawyer_id) {
+        return res.status(400).json({ message: "Lawyer ID is required." });
+    }
+
+    const verificationRef = ref(database, `lawyer_verification/${lawyer_id}`);
+
+    try {
+        await remove(verificationRef);
+        logger.info("Lawyer verification deleted successfully", { lawyer_id });
+        return res.status(200).json({ message: "Verification deleted successfully." });
+    } catch (error) {
+        logger.error("Failed to delete verification", { error: error.message });
+        return res.status(500).json({ message: "Failed to delete verification", error: error.message });
+    }
+}
+
 module.exports = { addLawyer, getAllLawyers, getLawyerById, registerLawyer, initiateLawyerRegistration, 
     uploadTestController, updateLawyer, addRating, updateRating,getAllRatingsByLawyerWithClients,
-     deleteRating, addViewToLawyerProfile, getViewsByLawyerId };
+     deleteRating, addViewToLawyerProfile, getViewsByLawyerId, createLawyerVerification, deleteLawyerVerification };

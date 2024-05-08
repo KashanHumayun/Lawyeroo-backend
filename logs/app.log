@@ -698,3 +698,163 @@
   "level": "info",
   "message": "All related replies deleted for comment ID: -NwNG0PLCpTsKJXGCJDq"
 }
+{
+  "timestamp": "2024-05-07T13:37:10.637Z",
+  "level": "info",
+  "message": "Received request to initiate lawyer registration"
+}
+{
+  "timestamp": "2024-05-07T13:37:10.988Z",
+  "level": "info",
+  "message": "OTP generated"
+}
+{
+  "timestamp": "2024-05-07T13:37:12.893Z",
+  "level": "info",
+  "message": "OTP email sent"
+}
+{
+  "timestamp": "2024-05-07T13:38:04.712Z",
+  "level": "info",
+  "message": "Received request to initiate lawyer registration"
+}
+{
+  "timestamp": "2024-05-07T13:38:05.820Z",
+  "level": "info",
+  "message": "OTP generated"
+}
+{
+  "timestamp": "2024-05-07T13:38:06.803Z",
+  "level": "info",
+  "message": "OTP email sent"
+}
+{
+  "timestamp": "2024-05-07T13:40:22.665Z",
+  "level": "info",
+  "message": "Received request to initiate lawyer registration"
+}
+{
+  "timestamp": "2024-05-07T13:40:23.704Z",
+  "level": "info",
+  "message": "OTP generated"
+}
+{
+  "timestamp": "2024-05-07T13:40:25.461Z",
+  "level": "info",
+  "message": "OTP email sent"
+}
+{
+  "timestamp": "2024-05-07T13:40:25.627Z",
+  "level": "info",
+  "message": "Password hashed"
+}
+{
+  "timestamp": "2024-05-07T13:40:25.631Z",
+  "level": "info",
+  "message": "Temporary lawyer data stored in memory"
+}
+{
+  "timestamp": "2024-05-07T13:41:30.803Z",
+  "level": "info",
+  "message": "Received registration request"
+}
+{
+  "timestamp": "2024-05-07T13:41:30.810Z",
+  "level": "info",
+  "message": "Received picture for registration"
+}
+{
+  "timestamp": "2024-05-07T13:41:30.812Z",
+  "level": "info",
+  "message": "Attempting to upload file"
+}
+{
+  "timestamp": "2024-05-07T13:41:33.341Z",
+  "level": "info",
+  "message": "File uploaded successfully"
+}
+{
+  "timestamp": "2024-05-07T13:41:33.348Z",
+  "level": "info",
+  "message": "Image uploaded successfully"
+}
+{
+  "timestamp": "2024-05-07T13:41:33.486Z",
+  "level": "info",
+  "message": "Lawyer registered successfully"
+}
+{
+  "timestamp": "2024-05-07T13:41:33.494Z",
+  "level": "info",
+  "message": "Temporary data cleared from memory"
+}
+{
+  "timestamp": "2024-05-07T13:43:34.774Z",
+  "level": "info",
+  "message": "Received request to initiate lawyer registration"
+}
+{
+  "timestamp": "2024-05-07T13:43:35.912Z",
+  "level": "warn",
+  "message": "Email already registered as lawyer"
+}
+{
+  "timestamp": "2024-05-07T13:43:45.203Z",
+  "level": "info",
+  "message": "Received request to initiate lawyer registration"
+}
+{
+  "timestamp": "2024-05-07T13:43:45.419Z",
+  "level": "info",
+  "message": "OTP generated"
+}
+{
+  "timestamp": "2024-05-07T13:43:47.045Z",
+  "level": "info",
+  "message": "OTP email sent"
+}
+{
+  "timestamp": "2024-05-07T13:43:47.284Z",
+  "level": "info",
+  "message": "Password hashed"
+}
+{
+  "timestamp": "2024-05-07T13:43:47.285Z",
+  "level": "info",
+  "message": "Temporary lawyer data stored in memory"
+}
+{
+  "timestamp": "2024-05-07T13:44:29.453Z",
+  "level": "info",
+  "message": "Received registration request"
+}
+{
+  "timestamp": "2024-05-07T13:44:29.457Z",
+  "level": "info",
+  "message": "Received picture for registration"
+}
+{
+  "timestamp": "2024-05-07T13:44:29.458Z",
+  "level": "info",
+  "message": "Attempting to upload file"
+}
+{
+  "timestamp": "2024-05-07T13:44:31.741Z",
+  "level": "info",
+  "message": "File uploaded successfully"
+}
+{
+  "timestamp": "2024-05-07T13:44:31.747Z",
+  "level": "info",
+  "message": "Image uploaded successfully"
+}
+{
+  "timestamp": "2024-05-07T13:44:31.881Z",
+  "level": "info",
+  "message": "Lawyer registered successfully"
+}
+{
+  "timestamp": "2024-05-07T13:44:31.887Z",
+  "level": "info",
+  "message": "Temporary data cleared from memory"
+}
