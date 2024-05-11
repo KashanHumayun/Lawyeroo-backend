@@ -262,7 +262,12 @@ async function getAllLawyers(req, res) {
             return res.status(404).json({ message: 'No lawyers found' });
         }
 
-        let lawyers = Object.values(snapshot.val());
+        let lawyers = [];
+        snapshot.forEach(childSnapshot => {
+            let lawyer = childSnapshot.val();
+            lawyer.id = childSnapshot.key; // Include the Firebase key as the lawyer's ID
+            lawyers.push(lawyer);
+        });
 
         // Keyword search
         if (keyword) {
@@ -291,17 +296,15 @@ async function getAllLawyers(req, res) {
         // Specializations filter
         if (specializations) {
             const specializationArray = specializations.split(',').map(s => s.trim());
-            const validSpecializations = specializationArray.filter(s => predefinedSpecializations.includes(s));
             lawyers = lawyers.filter(lawyer => {
                 const lawyerSpecializations = Array.isArray(lawyer.specializations) ?
                     lawyer.specializations :
                     [lawyer.specializations];
-                return validSpecializations.every(s => lawyerSpecializations.includes(s));
+                return specializationArray.every(s => lawyerSpecializations.includes(s));
             });
         }
 
-        // Apply other filters
-        lawyers = applyLawyerFilters(lawyers, otherFilters);
+        // Apply other filters dynamically based on `otherFilters` if needed
 
         if (lawyers.length === 0) {
             logger.info("No matching lawyers found after applying filters");
@@ -315,6 +318,7 @@ async function getAllLawyers(req, res) {
         res.status(500).json({ message: 'Error retrieving lawyers', error: error.message });
     }
 }
+
 
 
 
@@ -750,7 +754,7 @@ async function getViewsByLawyerId (req, res) {
 
 async function createLawyerVerification(req, res) {
     const { lawyer_id, first_name, last_name, registration_no } = req.body;
-
+    console.log(first_name + ' ' + last_name+ ' ' + registration_no+ ' ' + registration_no);
     // Validate input
     if (!lawyer_id || !first_name || !last_name || !registration_no) {
         return res.status(400).json({ message: "All fields are required." });

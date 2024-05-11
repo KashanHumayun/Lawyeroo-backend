@@ -858,3 +858,178 @@
   "level": "info",
   "message": "Temporary data cleared from memory"
 }
+{
+  "timestamp": "2024-05-08T16:04:09.087Z",
+  "level": "info",
+  "message": "Lawyer verification created successfully"
+}
+{
+  "timestamp": "2024-05-08T16:06:48.821Z",
+  "level": "info",
+  "message": "Lawyer verification deleted successfully"
+}
+{
+  "timestamp": "2024-05-09T18:18:20.266Z",
+  "level": "info",
+  "message": "Client data set in database:"
+}
+{
+  "timestamp": "2024-05-09T18:18:20.306Z",
+  "level": "info",
+  "message": "Temporary data cleared from memory for:"
+}
+{
+  "timestamp": "2024-05-09T18:45:15.163Z",
+  "level": "info",
+  "message": "Client data set in database:"
+}
+{
+  "timestamp": "2024-05-09T18:45:15.166Z",
+  "level": "info",
+  "message": "Temporary data cleared from memory for:"
+}
+{
+  "timestamp": "2024-05-09T19:09:36.096Z",
+  "level": "info",
+  "message": "Client data set in database:"
+}
+{
+  "timestamp": "2024-05-09T19:09:36.103Z",
+  "level": "info",
+  "message": "Temporary data cleared from memory for:"
+}
+{
+  "timestamp": "2024-05-09T19:18:57.930Z",
+  "level": "info",
+  "message": "Client data set in database:"
+}
+{
+  "timestamp": "2024-05-09T19:18:57.937Z",
+  "level": "info",
+  "message": "Temporary data cleared from memory for:"
+}
+{
+  "timestamp": "2024-05-09T19:24:29.245Z",
+  "level": "info",
+  "message": "Client data set in database:"
+}
+{
+  "timestamp": "2024-05-09T19:24:29.247Z",
+  "level": "info",
+  "message": "Temporary data cleared from memory for:"
+}
+{
+  "timestamp": "2024-05-09T19:42:13.667Z",
+  "level": "info",
+  "message": "Client data set in database:"
+}
+{
+  "timestamp": "2024-05-09T19:42:13.671Z",
+  "level": "info",
+  "message": "Temporary data cleared from memory for:"
+}
+{
+  "timestamp": "2024-05-09T20:43:53.150Z",
+  "level": "info",
+  "message": "Client data set in database:"
+}
+{
+  "timestamp": "2024-05-09T20:43:53.176Z",
+  "level": "info",
+  "message": "Temporary data cleared from memory for:"
+}
+{
+  "timestamp": "2024-05-10T10:56:24.931Z",
+  "level": "info",
+  "message": "Client data set in database:"
+}
+{
+  "timestamp": "2024-05-10T10:56:24.978Z",
+  "level": "info",
+  "message": "Temporary data cleared from memory for:"
+}
+{
+  "timestamp": "2024-05-10T11:12:23.283Z",
+  "level": "info",
+  "message": "Client data set in database:"
+}
+{
+  "timestamp": "2024-05-10T11:12:23.289Z",
+  "level": "info",
+  "message": "Temporary data cleared from memory for:"
+}
+{
+  "timestamp": "2024-05-10T11:44:16.126Z",
+  "level": "info",
+  "message": "Client data set in database:"
+}
+{
+  "timestamp": "2024-05-10T11:44:16.142Z",
+  "level": "info",
+  "message": "Temporary data cleared from memory for:"
+}
+{
+  "timestamp": "2024-05-10T11:47:39.255Z",
+  "level": "info",
+  "message": "Client data set in database:"
+}
+{
+  "timestamp": "2024-05-10T11:47:39.260Z",
+  "level": "info",
+  "message": "Temporary data cleared from memory for:"
+}
+{
+  "timestamp": "2024-05-10T12:55:20.045Z",
+  "level": "info",
+  "message": "Client data set in database:"
+}
+{
+  "timestamp": "2024-05-10T12:55:20.049Z",
+  "level": "info",
+  "message": "Temporary data cleared from memory for:"
+}
+{
+  "timestamp": "2024-05-10T14:12:42.275Z",
+  "level": "info",
+  "message": "Client data set in database:"
+}
+{
+  "timestamp": "2024-05-10T14:12:42.282Z",
+  "level": "info",
+  "message": "Temporary data cleared from memory for:"
+}
+{
+  "timestamp": "2024-05-10T18:58:42.961Z",
+  "level": "info",
+  "message": "No client found with ID: -Nvs0D2WqXpuqNOCnLEC"
+}
+{
+  "timestamp": "2024-05-10T19:00:00.043Z",
+  "level": "info",
+  "message": "Client data retrieved successfully for ID: -NwBB-yOIGQlqLonV6Cx"
+}
+{
+  "timestamp": "2024-05-10T20:56:23.961Z",
+  "level": "info",
+  "message": "No client found with ID: -Nvs0D2WqXpuqNOCnLEC"
+}
+{
+  "timestamp": "2024-05-10T21:54:12.592Z",
+  "level": "info",
+  "message": "Client data set in database:"
+}
+{
+  "timestamp": "2024-05-10T21:54:12.602Z",
+  "level": "info",
+  "message": "Temporary data cleared from memory for:"
+}
+{
+  "timestamp": "2024-05-11T17:18:45.253Z",
+  "level": "info",
+  "message": "Fetching all lawyers with filters"
+}
+{
+  "timestamp": "2024-05-11T17:18:46.855Z",
+  "level": "info",
+  "message": "Lawyers retrieved successfully"
+}

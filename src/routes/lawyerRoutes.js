@@ -46,5 +46,3 @@ router.post('/lawyer-verification', authenticateTokenAndRole(['admins', 'lawyers
 router.delete('/lawyer-verification/:lawyer_id', authenticateTokenAndRole(['admins',  'lawyers']), deleteLawyerVerification);
 
 module.exports = router;
-
-
