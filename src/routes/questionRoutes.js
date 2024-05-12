@@ -21,10 +21,10 @@ router.post('/answers', authenticateTokenAndRole(['clients', 'lawyers']), create
 router.get('/', authenticateTokenAndRole(['clients', 'lawyers']), getAllQuestionsWithAnswers);
 // Route to get questions by client ID, accessible only by clients
 
-router.get('/client/:client_id', authenticateTokenAndRole(['clients']), getQuestionsByClientId);
+router.get('/client/:client_id', authenticateTokenAndRole(['clients','admins']), getQuestionsByClientId);
 //Route to delete questions by question ID, accessible only by clients
 
-router.delete('/:question_id', authenticateTokenAndRole(['clients']), deleteQuestion);
+router.delete('/:question_id', authenticateTokenAndRole(['clients','admins']), deleteQuestion);
 
 router.delete('/:question_id/answers/:answer_id', authenticateTokenAndRole(['lawyers', 'admins']), deleteAnswer);
 

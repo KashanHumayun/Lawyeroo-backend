@@ -1033,3 +1033,68 @@
   "level": "info",
   "message": "Lawyers retrieved successfully"
 }
+{
+  "timestamp": "2024-05-12T20:35:50.313Z",
+  "level": "error",
+  "message": "Error registering admin: set failed: value argument contains undefined in property 'admins.-NxiWCLbPdoR2RjKH25G.last_name'"
+}
+{
+  "timestamp": "2024-05-12T20:38:15.102Z",
+  "level": "error",
+  "message": "Error registering admin: set failed: value argument contains undefined in property 'admins.-NxiWkgwryw-B_o6m0OK.last_name'"
+}
+{
+  "timestamp": "2024-05-12T20:48:45.121Z",
+  "level": "error",
+  "message": "Error registering admin: set failed: value argument contains undefined in property 'admins.-NxiZ9VvzpJAsz23BqGF.last_name'"
+}
+{
+  "timestamp": "2024-05-12T20:50:30.259Z",
+  "level": "error",
+  "message": "Error registering admin: set failed: value argument contains undefined in property 'admins.-NxiZZAkdTBL0oerdh3T.last_name'"
+}
+{
+  "timestamp": "2024-05-12T20:52:58.842Z",
+  "level": "info",
+  "message": "Admin registered successfully:"
+}
+{
+  "timestamp": "2024-05-12T20:54:45.914Z",
+  "level": "info",
+  "message": "Admin registered successfully:"
+}
+{
+  "timestamp": "2024-05-12T20:56:19.917Z",
+  "level": "error",
+  "message": "Error registering admin: storageRef is not defined"
+}
+{
+  "timestamp": "2024-05-12T20:57:19.997Z",
+  "level": "error",
+  "message": "Error registering admin: storage is not defined"
+}
+{
+  "timestamp": "2024-05-12T20:58:51.615Z",
+  "level": "error",
+  "message": "Upload failed:"
+}
+{
+  "timestamp": "2024-05-12T20:58:51.618Z",
+  "level": "error",
+  "message": "Error registering admin: Failed to upload image due to error: axios is not defined"
+}
+{
+  "timestamp": "2024-05-12T20:59:26.016Z",
+  "level": "info",
+  "message": "Admin registered successfully:"
+}
+{
+  "timestamp": "2024-05-12T21:04:34.360Z",
+  "level": "info",
+  "message": "Admin registered successfully:"
+}
+{
+  "timestamp": "2024-05-12T21:06:33.493Z",
+  "level": "info",
+  "message": "Admin registered successfully:"
+}
