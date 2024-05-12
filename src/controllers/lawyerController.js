@@ -837,7 +837,7 @@ async function getNearbyLawyers(req, res) {
         let countryMatches = [];
 
         snapshot.forEach(childSnapshot => {
-            const lawyer = childSnapshot.val();
+            const lawyer = { ...childSnapshot.val(), id: childSnapshot.key };  // Include the lawyer's Firebase key as the ID
             const { city: lCity, state: lState, country: lCountry } = parseAddress(lawyer.address);
 
             if (lCity === city) {
@@ -862,6 +862,7 @@ async function getNearbyLawyers(req, res) {
         return res.status(500).json({ message: 'Failed to retrieve nearby lawyers', error: error.message });
     }
 }
+
 
 
 module.exports = { addLawyer, getAllLawyers, getLawyerById, registerLawyer, initiateLawyerRegistration, 
