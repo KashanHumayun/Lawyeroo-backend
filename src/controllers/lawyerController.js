@@ -796,6 +796,74 @@ async function deleteLawyerVerification(req, res) {
     }
 }
 
+
+function parseAddress(address) {
+    const parts = address.split(',').map(part => part.trim());
+    if (parts.length !== 3) {
+        throw new Error("Address format is incorrect. Expected format: 'City, State, Country'");
+    }
+    return {
+        city: parts[0],
+        state: parts[1],
+        country: parts[2]
+    };
+}
+
+async function getNearbyLawyers(req, res) {
+    const addressString = req.query.address || req.body.address;
+    if (!addressString) {
+        return res.status(400).json({ message: 'No address provided. Please provide an address in the format "City, State, Country".' });
+    }
+
+    let parsedAddress;
+    try {
+        parsedAddress = parseAddress(addressString);
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+
+    const { city, state, country } = parsedAddress;
+
+    try {
+        const lawyersRef = ref(database, 'lawyers');
+        const snapshot = await get(lawyersRef);
+
+        if (!snapshot.exists()) {
+            return res.status(404).json({ message: 'No lawyers found.' });
+        }
+
+        let cityMatches = [];
+        let stateMatches = [];
+        let countryMatches = [];
+
+        snapshot.forEach(childSnapshot => {
+            const lawyer = childSnapshot.val();
+            const { city: lCity, state: lState, country: lCountry } = parseAddress(lawyer.address);
+
+            if (lCity === city) {
+                cityMatches.push(lawyer);
+            } else if (lState === state) {
+                stateMatches.push(lawyer);
+            } else if (lCountry === country) {
+                countryMatches.push(lawyer);
+            }
+        });
+
+        // Combine results with prioritization
+        let matchedLawyers = [...cityMatches, ...stateMatches, ...countryMatches].slice(0, 10);
+
+        if (matchedLawyers.length === 0) {
+            return res.status(404).json({ message: 'No nearby lawyers found.' });
+        }
+
+        return res.status(200).json(matchedLawyers);
+    } catch (error) {
+        logger.error('Error retrieving nearby lawyers', { error: error.message });
+        return res.status(500).json({ message: 'Failed to retrieve nearby lawyers', error: error.message });
+    }
+}
+
+
 module.exports = { addLawyer, getAllLawyers, getLawyerById, registerLawyer, initiateLawyerRegistration, 
     uploadTestController, updateLawyer, addRating, updateRating,getAllRatingsByLawyerWithClients,
-     deleteRating, addViewToLawyerProfile, getViewsByLawyerId, createLawyerVerification, deleteLawyerVerification };
+     deleteRating, addViewToLawyerProfile, getViewsByLawyerId, createLawyerVerification, deleteLawyerVerification, getNearbyLawyers };

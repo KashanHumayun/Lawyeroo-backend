@@ -4,7 +4,7 @@ const upload = require('../middleware/fileUpload'); // This imports multer confi
 const authenticateTokenAndRole = require('../middleware/authenticateTokenAndRole'); // Adjust the path as necessary
 const { addLawyer,initiateLawyerRegistration, registerLawyer,getLawyerById,  getAllLawyers, uploadTestController, 
     updateLawyer, addRating, updateRating, getAllRatingsByLawyerWithClients ,deleteRating, getViewsByLawyerId, 
-    addViewToLawyerProfile, createLawyerVerification, deleteLawyerVerification} = require('../controllers/lawyerController');
+    addViewToLawyerProfile, createLawyerVerification, deleteLawyerVerification, getNearbyLawyers} = require('../controllers/lawyerController');
 
 // POST endpoint to add a new lawyer. Includes multer middleware for handling file uploads
 router.post('/add-lawyer', upload.single('profile_picture'), addLawyer);
@@ -44,5 +44,8 @@ router.post('/lawyer-verification', authenticateTokenAndRole(['admins', 'lawyers
 
 // DELETE endpoint to delete a lawyer verification
 router.delete('/lawyer-verification/:lawyer_id', authenticateTokenAndRole(['admins',  'lawyers']), deleteLawyerVerification);
+
+// Get Nearby Lawyers
+router.post('/nearby-lawyers', authenticateTokenAndRole(['clients']), getNearbyLawyers)
 
 module.exports = router;
