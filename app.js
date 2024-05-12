@@ -31,7 +31,7 @@ const questionRoutes = require('./src/routes/questionRoutes');
 const appointmentRoutes = require('./src/routes/appointmentRoutes');
 const lawyerCommentRoutes = require('./src/routes/lawyerCommentRoutes');
 const caseRoutes = require('./src/routes/caseRoutes');
-
+const messageRoutes = require('./src/routes/messageRoutes');
 // Middlewares
 app.use(cors());
 app.use(express.json());
@@ -120,34 +120,7 @@ app.get('/auth/google/callback', async (req, res) => {
     }
 });
 
-// WebRTC Signaling Routes
-io.on('connection', socket => {
-    console.log('New connection: ' + socket.id);
 
-    // Handle signaling messages
-    socket.on('offer', (data) => {
-        console.log('Received offer:', data);
-        // Forward offer to the intended recipient
-        io.to(data.toId).emit('offer', data);
-    });
-
-    socket.on('answer', (data) => {
-        console.log('Received answer:', data);
-        // Forward answer to the intended recipient
-        io.to(data.toId).emit('answer', data);
-    });
-
-    socket.on('candidate', (data) => {
-        console.log('Received ICE candidate:', data);
-        // Forward ICE candidate to the intended recipient
-        io.to(data.toId).emit('candidate', data);
-    });
-
-    // Handle disconnects
-    socket.on('disconnect', () => {
-        console.log('User disconnected: ' + socket.id);
-    });
-});
 
 // Routes (if unchanged)
 
@@ -155,6 +128,7 @@ io.on('connection', socket => {
 
 
 // Route handlers
+
 app.use('/api/admins', adminRoutes);
 app.use('/api/lawyers', lawyerRoutes);
 app.use('/api/clients', clientRoutes);
@@ -164,6 +138,7 @@ app.use('/api/questions', questionRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use ('/api/comments', lawyerCommentRoutes);
 app.use ('/api', caseRoutes);
+app.use ('/api/messages', messageRoutes);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
