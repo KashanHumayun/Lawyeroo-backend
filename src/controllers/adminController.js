@@ -80,6 +80,57 @@ const registerAdmin = async (req, res) => {
     }
 };
 
+const updateAdmin = async (req, res) => {
+    const { id } = req.params; // Get the admin ID from the URL
+    try {
+        const adminRef = ref(database, `admins/${id}`);
+        const snapshot = await get(adminRef);
+
+        if (!snapshot.exists()) {
+            return res.status(404).json({ message: "Admin not found" });
+        }
+
+        // Existing admin data
+        const adminData = snapshot.val();
+
+        // Data to update
+        const { first_name, last_name, email, ph_number, address, profile_picture, account_type } = req.body;
+
+        // Optional: Update the password only if provided
+        let hashedPassword = adminData.password;
+        if (req.body.password) {
+            hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+        }
+
+        // Update the image only if a new file is uploaded
+        let imageUrl = adminData.profile_picture;
+        if (req.file) {
+            imageUrl = await uploadImageToFirebaseStorage(req.file.buffer, req.file.originalname);
+        }
+
+        // Prepare the updated data
+        const updatedData = {
+            ...adminData,
+            first_name: first_name || adminData.first_name,
+            last_name: last_name || adminData.last_name,
+            email: email || adminData.email,
+            ph_number: ph_number || adminData.ph_number,
+            address: address || adminData.address,
+            profile_picture: imageUrl,
+            account_type: account_type || adminData.account_type,
+            password: hashedPassword
+        };
+
+        // Save the updated data back to the database
+        await set(adminRef, updatedData);
+
+        logger.info('Admin updated successfully:', id);
+        res.status(200).json({ message: 'Admin updated successfully', adminId: id });
+    } catch (error) {
+        logger.error('Error updating admin:', error);
+        res.status(500).json({ message: 'Error updating admin', error: error.message });
+    }
+};
 
 const getAllAdmins = async (req, res) => {
     try {
