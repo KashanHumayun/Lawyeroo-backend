@@ -1,5 +1,5 @@
 const Admin = require('../models/adminModel');
-const { ref, set, push, onValue } = require('firebase/database');
+const { ref, set, push,get, onValue, remove } = require('firebase/database');
 const { ref: storageRef, uploadBytes, getDownloadURL } = require('firebase/storage');
 const { storage, database, getClientByEmail, getLawyerByEmail } = require('../config/firebaseConfig');
 const axios = require('axios');
@@ -98,14 +98,24 @@ const updateAdmin = async (req, res) => {
 
         // Optional: Update the password only if provided
         let hashedPassword = adminData.password;
-        if (req.body.password) {
+        if (req.body.password && !req.body.passwordHash) {
+            // If password is provided and not already hashed
             hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+        } else if (req.body.passwordHash) {
+            // If password is already hashed
+            hashedPassword = req.body.passwordHash;
         }
+        
 
         // Update the image only if a new file is uploaded
         let imageUrl = adminData.profile_picture;
+        console.log("IMAGEURL",imageUrl);
+        console.log("image", req.file);
         if (req.file) {
+            console.log("inside req.file",req.file);
             imageUrl = await uploadImageToFirebaseStorage(req.file.buffer, req.file.originalname);
+            console.log("outside req.file",req.file);
+            console.log("Updated imageURL", imageUrl);
         }
 
         // Prepare the updated data
@@ -157,4 +167,29 @@ const getAllAdmins = async (req, res) => {
     }
 };
 
-module.exports = { registerAdmin, getAllAdmins };
+const deleteAdmin = async (req, res) => {
+    try {
+        const { id } = req.params; // Get the admin ID from the URL
+        
+        // Construct admin reference
+        const adminRef = ref(database, `admins/${id}`);
+        
+        // Check if the admin exists
+        const snapshot = await get(adminRef); // Use get() to retrieve the data
+        if (!snapshot.exists()) {
+            return res.status(404).json({ message: "Admin not found" });
+        }
+        
+        // Delete the admin
+        await remove(adminRef);
+
+        logger.info('Admin deleted successfully:', id);
+        res.status(200).json({ message: 'Admin deleted successfully', adminId: id });
+    } catch (error) {
+        logger.error('Error deleting admin:', error);
+        res.status(500).json({ message: 'Error deleting admin', error: error.message });
+    }
+};
+
+
+module.exports = { registerAdmin, getAllAdmins, updateAdmin,deleteAdmin };

@@ -12,10 +12,10 @@ const {
 } = require('../controllers/questionController');  // Adjust the path as necessary
 // Route to create a new question, accessible only by clients
 
-router.post('/', authenticateTokenAndRole(['clients', 'admins']), createQuestion);
+router.post('/', authenticateTokenAndRole(['clients', 'lawyers','admins']), createQuestion);
 // Route to create a new answer, accessible only by lawyers
 
-router.post('/answers', authenticateTokenAndRole(['clients', 'lawyers']), createAnswer);
+router.post('/answers', authenticateTokenAndRole(['clients', 'lawyers','admins']), createAnswer);
 // Route to get all questions with their answers, accessible by both clients and lawyers
 
 router.get('/', authenticateTokenAndRole(['clients', 'lawyers']), getAllQuestionsWithAnswers);

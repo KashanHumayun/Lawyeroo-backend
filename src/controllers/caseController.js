@@ -163,6 +163,59 @@ async function getAllCasesByUserId(req, res) {
     }
 }
 
+async function getAllCases(req, res) {
+    try {
+        const casesRef = ref(database, 'cases');
+        const allCasesSnapshot = await get(casesRef);
+
+        if (!allCasesSnapshot.exists()) {
+            logger.info('No cases found in the database.');
+            return res.status(404).json({ message: 'No cases found' });
+        }
+
+        let cases = [];
+        let userDetailsPromises = [];
+
+        allCasesSnapshot.forEach(childSnapshot => {
+            let caseData = childSnapshot.val();
+            caseData.case_id = childSnapshot.key; // Include the case ID
+
+            // Fetch additional details for lawyer and client
+            userDetailsPromises.push(
+                get(ref(database, `lawyers/${caseData.lawyer_id}`)).then(lawyerSnapshot => {
+                    if (lawyerSnapshot.exists()) {
+                        caseData.lawyerDetails = lawyerSnapshot.val();
+                    } else {
+                        caseData.lawyerDetails = { message: 'Lawyer details not found' };
+                    }
+                }),
+                get(ref(database, `clients/${caseData.client_id}`)).then(clientSnapshot => {
+                    if (clientSnapshot.exists()) {
+                        caseData.clientDetails = clientSnapshot.val();
+                    } else {
+                        caseData.clientDetails = { message: 'Client details not found' };
+                    }
+                })
+            );
+
+            cases.push(caseData);
+        });
+
+        // Resolve all promises to fetch user details
+        await Promise.all(userDetailsPromises);
+
+        if (cases.length === 0) {
+            logger.info('No cases found after filtering.');
+            return res.status(404).json({ message: 'No cases found' });
+        }
+
+        logger.info('Cases with additional user data retrieved successfully.');
+        res.status(200).json(cases);
+    } catch (error) {
+        logger.error('Error retrieving cases:', error);
+        res.status(500).json({ message: 'Failed to retrieve cases', error: error.toString() });
+    }
+}
 
 
 module.exports = {
@@ -170,5 +223,6 @@ module.exports = {
     updateCase,
     deleteCase,
     getCase,
-    getAllCasesByUserId
+    getAllCasesByUserId,
+    getAllCases
 };

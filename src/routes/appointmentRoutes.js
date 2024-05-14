@@ -15,4 +15,6 @@ router.delete('/:appointment_id',authenticateTokenAndRole(['clients', 'lawyers',
 // Route to get all appointments for a client or lawyer
 router.get('/:user_id', authenticateTokenAndRole(['clients', 'lawyers', 'admins']), appointmentController.getAppointmentsByUser);
 
+router.get('/',authenticateTokenAndRole(['admins']) ,appointmentController.getAllAppointments);
+
 module.exports = router;

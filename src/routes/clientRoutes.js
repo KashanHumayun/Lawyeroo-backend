@@ -12,7 +12,8 @@ const {
     getClientById,
     deleteFavoriteLawyer,
     addFavoriteLawyer,
-    getAllFavoriteLawyers
+    getAllFavoriteLawyers,
+    deleteClient
 } = require('../controllers/clientController');
 
 // Modify the POST route to include multer middleware for handling the profile_picture
@@ -35,5 +36,6 @@ router.get('/:id', authenticateTokenAndRole(['clients', 'admins', 'lawyers']), g
 router.post('/favorites', authenticateTokenAndRole(['clients']), addFavoriteLawyer);
 router.delete('/:client_id/favorites/:lawyer_id', authenticateTokenAndRole(['clients']), deleteFavoriteLawyer);
 router.get('/:client_id/favorites', authenticateTokenAndRole(['clients']), getAllFavoriteLawyers);
+router.delete('/:id', authenticateTokenAndRole(['clients', 'admins']), deleteClient);
 
 module.exports = router;

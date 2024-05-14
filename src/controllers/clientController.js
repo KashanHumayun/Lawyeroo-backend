@@ -167,6 +167,29 @@ async function registerClient(req, res) {
     res.status(201).json({ message: 'Client registered successfully.', lawyerId: clientRef.key });
 }
 
+async function deleteClient(req, res) {
+    const clientId = req.params.id; // Get the client ID from the request parameters
+    console.log("Inside Delete Client", clientId);
+    console.log("Inside Delete Client", clientId);
+    try {
+        const clientRef = ref(database, `clients/${clientId}`);
+
+        // Check if the client exists before attempting to delete
+        const clientSnapshot = await get(clientRef);
+        if (!clientSnapshot.exists()) {
+            logger.error('Client not found');
+            return res.status(404).json({ message: 'Client not found' });
+        }
+
+        // Delete the client from the database
+        await remove(clientRef);
+        logger.info('Client deleted successfully:', clientId);
+        return res.status(200).json({ message: 'Client deleted successfully' });
+    } catch (error) {
+        logger.error('Error deleting client:', error);
+        return res.status(500).json({ message: 'Error deleting client', error: error.message });
+    }
+}
 
 const addClient = async (req, res) => {
     try {
@@ -434,4 +457,4 @@ async function getAllFavoriteLawyers(req, res) {
 
 
 module.exports = { addClient, getAllClients ,initiateClientRegistration, registerClient, 
-    updateClient, getClientById , addFavoriteLawyer, deleteFavoriteLawyer, getAllFavoriteLawyers};
+    updateClient, getClientById , addFavoriteLawyer, deleteFavoriteLawyer, getAllFavoriteLawyers, deleteClient};

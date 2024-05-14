@@ -54,7 +54,7 @@ exports.createAppointment = async (req, res) => {
 exports.updateAppointmentStatus = async (req, res) => {
     const { appointment_id, status, date  } = req.body; // status could be 'accepted' or 'rejected'
 
-    if (!['accepted', 'rejected'].includes(status)) {
+    if (!['accepted', 'rejected', 'pending'].includes(status)) {
         return res.status(400).json({ message: "Invalid status. Only 'accepted' or 'rejected' are allowed." });
     }
     try {
@@ -129,4 +129,27 @@ exports.deleteAppointment = async (req, res) => {
     }
 };
 
+exports.getAllAppointments = async (req, res) => {
+    try {
+        const appointmentsRef = ref(database, 'appointments');
+        const appointmentsSnapshot = await get(appointmentsRef);
+        const appointments = appointmentsSnapshot.val();
+
+        if (!appointments) {
+            logger.info("No appointments found.");
+            return res.status(404).json({ success: false, message: "No appointments found." });
+        }
+
+        const allAppointments = [];
+        for (const appointment_id in appointments) {
+            allAppointments.push({ appointment_id, ...appointments[appointment_id] });
+        }
+
+        logger.info("All appointments retrieved successfully.");
+        res.status(200).json({ success: true, data: allAppointments });
+    } catch (error) {
+        logger.error("Error retrieving all appointments:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
 

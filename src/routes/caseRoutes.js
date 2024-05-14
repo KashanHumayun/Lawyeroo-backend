@@ -7,7 +7,8 @@ const {
     updateCase,
     deleteCase,
     getCase,
-    getAllCasesByUserId
+    getAllCasesByUserId,
+    getAllCases
 } = require('../controllers/caseController');
 
 // Import the authentication and role checking middleware
@@ -27,5 +28,8 @@ router.get('/cases/:case_id', authenticateTokenAndRole(['clients', 'lawyers', 'a
 
 // Route to get all cases by user ID
 router.get('/cases/user/:role/:user_id', authenticateTokenAndRole(['clients', 'lawyers', 'admins']), getAllCasesByUserId);
+
+// Route to get all cases (without specifying user ID)
+router.get('/cases', authenticateTokenAndRole(['admins']), getAllCases);
 
 module.exports = router;
