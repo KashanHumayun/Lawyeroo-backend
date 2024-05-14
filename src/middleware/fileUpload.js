@@ -3,12 +3,14 @@ const multer = require('multer');
 // Configure multer to store files in memory
 const storage = multer.memoryStorage();
 const fileFilter = (req, file, cb) => {
-    console.log("Mime Type for a file:" + file.mimetype)
-    // Check if the MIME type starts with 'image/' and the file extension is one of the allowed types
-    if (file.mimetype.startsWith('image/') && ['image/jpeg', 'image/jpg', 'image/png'].includes(file.mimetype)) {
+    // Allowed MIME types
+    const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/octet-stream'];
+
+    // Check if the MIME type is one of the allowed types
+    if (file.mimetype.startsWith('image/') || allowedMimeTypes.includes(file.mimetype)) {
         cb(null, true); // Allow the upload
     } else {
-        cb(new Error('Please upload only JPEG, JPG, or PNG images.'), false); // Reject the upload
+        cb(new Error('Please upload only JPEG, JPG, PNG, or octet-stream files.'), false); // Reject the upload
     }
 };
 
